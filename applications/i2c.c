@@ -38,12 +38,13 @@ rt_err_t write_reg(rt_uint8_t reg, rt_uint8_t len, rt_uint8_t *buf)      //写 �
         ret = rt_i2c_transfer(camera_device_t.i2c, msgs, 2);
 
         if(ret != 2)
+//            rt_thread_mdelay(1);
         {
             rt_thread_mdelay(2);
             LOG_E("写1位      失败  '%d'  寄存器'%02x' 数据'%02x' ", ret, reg, *buf);
         }
-        else
-            LOG_I("写1位      成功  '%d'  寄存器'%02x' 数据'%02x' ", ret, reg, *buf);
+//        else
+//            LOG_I("写1位      成功  '%d'  寄存器'%02x' 数据'%02x' ", ret, reg, *buf);
     }while(ret != 2);
 
     return RT_EOK;
@@ -187,6 +188,7 @@ rt_err_t write_regs(const rt_uint8_t regs[][2], size_t regs_size) //写多个命
         ret = rt_i2c_transfer(camera_device_t.i2c, &msgs, 1);
 
         if(ret != 1)
+//            rt_thread_mdelay(1);
         {
             i--;
             LOG_E("写多位     失败       '%d'    寄存器'%02x' 数据'%02x' ", ret, regs[i][0], regs[i][1]);
@@ -195,8 +197,8 @@ rt_err_t write_regs(const rt_uint8_t regs[][2], size_t regs_size) //写多个命
 //        else
 //            LOG_I("写多位     成功       '%d'    寄存器'%02x' 数据'%02x' ", ret, regs[i][0], regs[i][1]);
 
-        if((regs[i][0] == 0xfe) && ret == 1)
-            LOG_I("写多位     成功       '%d'    寄存器'%02x' 数据'%02x' ", ret, regs[i][0], regs[i][1]);
+//        if((regs[i][0] == 0xfe) && ret == 1)
+//            LOG_I("写多位     成功       '%d'    寄存器'%02x' 数据'%02x' ", ret, regs[i][0], regs[i][1]);
 
         i++;
     }
@@ -232,12 +234,13 @@ rt_err_t set_reg_bits(rt_uint8_t reg, rt_uint8_t offset, rt_uint8_t mask, rt_uin
         ret = rt_i2c_transfer(camera_device_t.i2c, msgs1, 2);
 
         if(ret != 2)
+            rt_thread_mdelay(1);
         {
             LOG_E("读寄存器      失败   '%d'   寄存器'%02x' 数据'%02x' ", ret, reg, c_value);
             rt_thread_mdelay(2);
         }
-        else
-            LOG_I("读寄存器      成功   '%d'   寄存器'%02x' 数据'%02x' ", ret, reg, c_value);
+//        else
+//            LOG_I("读寄存器      成功   '%d'   寄存器'%02x' 数据'%02x' ", ret, reg, c_value);
 
     }while(ret != 2);
 
@@ -259,12 +262,13 @@ rt_err_t set_reg_bits(rt_uint8_t reg, rt_uint8_t offset, rt_uint8_t mask, rt_uin
         ret = rt_i2c_transfer(camera_device_t.i2c, msgs, 2);
 
         if(ret != 2)
+//            rt_thread_mdelay(1);
         {
             LOG_E("写寄存器      失败      '%d'   寄存器'%02x' 数据'%02x' ", ret, reg, new_value);
             rt_thread_mdelay(2);
         }
-        else
-            LOG_I("写寄存器      成功      '%d'   寄存器'%02x' 数据'%02x' ", ret, reg, new_value);
+//        else
+//            LOG_I("写寄存器      成功      '%d'   寄存器'%02x' 数据'%02x' ", ret, reg, new_value);
     }while(ret != 2);
 
     return RT_EOK;
@@ -290,12 +294,13 @@ rt_err_t read_reg(rt_uint8_t reg, rt_uint8_t len, rt_uint8_t *buf)       //读 �
         ret = rt_i2c_transfer(camera_device_t.i2c, msgs, 2);
 
         if(ret != 2)
+//            rt_thread_mdelay(1);
         {
             LOG_E("读1位      失败       '%d'   寄存器'%02x' 数据'%02x' ", ret, reg, *buf);
             rt_thread_mdelay(2);
         }
-        else
-            LOG_I("读1位      成功       '%d'   寄存器'%02x' 数据'%02x' ", ret, reg, *buf);
+//        else
+//            LOG_I("读1位      成功       '%d'   寄存器'%02x' 数据'%02x' ", ret, reg, *buf);
     }while(ret != 2);
 
     return RT_EOK;

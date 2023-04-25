@@ -35,22 +35,55 @@ static const rt_uint8_t gc0308_sensor_default_regs[][2] = {
 //    {0x0b, 0x02},
 //    {0x0c, 0x88},
 
-    /* VB > vs_st + vs_et (垂直回程时间（VB）)*/
-    /* P0:0x0d vs_st：此寄存器用于设置从帧开始到第一个有效HSYNC信号之间的行时间（以行数表示）
-     * 0x02 默认 */
-    {0x0d, 0x02},
+//    /* VB > vs_st + vs_et (垂直回程时间（VB）)*/
+//    /* P0:0x0d vs_st：此寄存器用于设置从帧开始到第一个有效HSYNC信号之间的行时间（以行数表示）
+//     * 0x02 默认 */
+//    {0x0d, 0x02},
+
     /* P0:0x0e vs_et： 此寄存器用于设置从最后一个有效HSYNC信号到帧结束之间的行时间（以行数表示）
      * 0x04 默认 */
     {0x0e, 0x02},
 
-    /* P0:0x10 Rsh_width：此寄存器用于设置restg_width（位[7:4]）和sh_width（位[3:0]），它们x2分别是HSYNC信号的宽度
+    /* P0:0x10 Rsh_width：此寄存器用于设置restg_width[7:4]和sh_width[3:0]
+     * x2后分别是HSYNC信号的宽度(可能是Reset Gate（复位门）的宽度和ample-and-Hold（采样保持）的宽度 不太确定)
      * 0x22 默认*/
     {0x10, 0x26},
 
-    {0x11, 0x0d},
+//    /* P0:0x11 Tsp_width：此寄存器用于设置tx_width[7:2]和space_width[1:0]
+//     * tx_width是传输宽度，指示HSYNC信号在一行像素数据传输期间持续的时间
+//     * space_width是HSYNC信号之间的间隔宽度，即HSYNC信号之间的空白时间(实际值要x2)
+//     * 0x0d 默认*/
+//    {0x11, 0x0d},
+
+    /* P0:0x12 Sh_delay：此寄存器用于设置采样保持延迟时间
+     * 0x42 默认*/
     {0x12, 0x2a},
-    {0x13, 0x00},
+
+//    /* P0:0x13 Row_tail_width：此寄存器用于设置Row_tail_width，用于在特殊应用中生成更多的HSYNC信号
+//     * 0x00 默认*/
+//    {0x13, 0x00},
+
+    /* P0:0x14 CISCTL_Mode1
+     * [7] hsync_always：此位用于控制HSYNC信号的输出模式
+     *      1：HSYNC信号始终处于开启状态，不论图像数据是否处于有效传输状态
+     *      0：HSYNC信号仅在图像数据处于有效输出状态时开启。在其他时间，HSYNC信号处于关闭状态
+     * [6] NA：保留位
+     * [5:4] CFA sequence：此两位用于设置CFA（Color Filter Array）序列。
+     *      CFA序列是指图像传感器上彩色滤镜阵列的排列顺序。一旦彩色滤镜阵列确定，CFA序列也会相应地确定
+     * [3:2] NA：保留位
+     * [1] upside down：此位用于控制图像传感器的翻转功能
+     *      1：垂直翻转
+     *      0：保持正常
+     * [0] mirror：此位用于控制图像传感器的镜像功能
+     *      1：镜像翻转
+     *      0：保持正常
+     * */
     {0x14, 0x13},
+
+    /* P0:0x15 CISCTL_mode2
+     * [7:6] output_mode：此两位用于控制图像传感器的输出模式
+     *
+     * */
     {0x15, 0x0a},
     {0x16, 0x05},
     {0x17, 0x01},
