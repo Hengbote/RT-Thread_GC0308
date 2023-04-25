@@ -5,6 +5,7 @@
 #include "GC0308_config.h"
 #include "i2c.h"
 
+#define CONFIG_GC_SENSOR_SUBSAMPLE_MODE 1   //子采样模式启用   否则就是窗口模式
 #define pictureBufferLength 38400
 static uint32_t JpegBuffer[pictureBufferLength];
 
@@ -59,7 +60,6 @@ static void GC0308_Reset(void)// 传感器复位函数
     write_regs(gc0308_sensor_default_regs, sizeof(gc0308_sensor_default_regs)/(sizeof(rt_uint8_t) * 2));
     LOG_I("Camera defaults loaded");
     rt_thread_mdelay(20);
-    write_reg_1data(RESET_RELATED, 0x00);   //寄存器选择第0页
 }
 
 static void set_pixformat(pixformat_t pixformat)   // 设置像素格式函数
@@ -121,14 +121,80 @@ static void set_pixformat(pixformat_t pixformat)   // 设置像素格式函数
 
 static void set_framesize(framesize_t framesize) // 设置帧尺寸函数
 {
-    // 获取指定帧尺寸的宽度和高度
-    rt_uint16_t w = resolution[framesize].width;    //640
-    rt_uint16_t h = resolution[framesize].height;   //480
+    rt_uint16_t w = resolution[framesize].width;    //指定帧尺寸的宽度
+    rt_uint16_t h = resolution[framesize].height;   //指定帧尺寸的高度
 
-    // 计算起始列和行，以使图像居中
-    rt_uint16_t col_s = (resolution[FRAMESIZE_640x480_VGA].width - w) / 2;  //0
-    rt_uint16_t row_s = (resolution[FRAMESIZE_640x480_VGA].height - h) / 2; //0
+    rt_uint16_t col_s = (resolution[FRAMESIZE_640x480_VGA].width - w) / 2;  //起始列
+    rt_uint16_t row_s = (resolution[FRAMESIZE_640x480_VGA].height - h) / 2; //起始行
 
+#if CONFIG_GC_SENSOR_SUBSAMPLE_MODE
+
+    struct subsample_cfg {  //子采样配置
+        uint16_t ratio_numerator;   //子采样比例的分子
+        uint16_t ratio_denominator; //子采样比例的分母
+
+        /*寄存器*/
+        uint8_t reg0x54;
+        uint8_t reg0x56;
+        uint8_t reg0x57;
+        uint8_t reg0x58;
+        uint8_t reg0x59;
+    };
+    const struct subsample_cfg subsample_cfgs[] = { // 定义子样本比率
+        {84,  420, 0x55, 0x00, 0x00, 0x00, 0x00},//1/5
+        {105, 420, 0x44, 0x00, 0x00, 0x00, 0x00},//1/4
+        {140, 420, 0x33, 0x00, 0x00, 0x00, 0x00},//1/3
+        {210, 420, 0x22, 0x00, 0x00, 0x00, 0x00},//1/2
+        {240, 420, 0x77, 0x02, 0x46, 0x02, 0x46},//4/7
+        {252, 420, 0x55, 0x02, 0x04, 0x02, 0x04},//3/5
+        {280, 420, 0x33, 0x02, 0x00, 0x02, 0x00},//2/3
+        {420, 420, 0x11, 0x00, 0x00, 0x00, 0x00},//1/1
+    };
+    uint16_t win_w = 640;   //窗口宽度
+    uint16_t win_h = 480;   //窗口高度
+    const struct subsample_cfg *cfg = NULL; //指向当前使用的子采样配置
+
+    /*策略:尽量保持最大的视角*/
+    for (size_t i = 0; i < sizeof(subsample_cfgs) / sizeof(struct subsample_cfg); i++) {    //遍历subsample_cfgs数组中的所有子采样配置
+        cfg = &subsample_cfgs[i];
+
+        if ((win_w * cfg->ratio_numerator / cfg->ratio_denominator >= w) &&     //如果 窗口宽度*样本比率>=指定宽度   并且
+            (win_h * cfg->ratio_numerator / cfg->ratio_denominator >= h))       //窗口高度*样本比率>=指定高度
+        {
+            win_w = w * cfg->ratio_denominator / cfg->ratio_numerator;          //窗口宽度=指定宽度*样本比率的倒数
+            win_h = h * cfg->ratio_denominator / cfg->ratio_numerator;          //窗口高度=指定高度*样本比率的倒数
+            row_s = (resolution[FRAMESIZE_640x480_VGA].height - win_h) / 2;     //起始列=(最大图像高度-窗口高度)/2
+            col_s = (resolution[FRAMESIZE_640x480_VGA].width - win_w) / 2;      //起始行=(最大图像宽度-窗口宽度)/2
+            LOG_I("subsample win:%d*%d", win_w, win_h);
+//            LOG_I("subsample win:%d*%d, ratio:%f", win_w, win_h, (float)cfg->ratio_numerator / (float)cfg->ratio_denominator);
+            break;
+        }
+    }
+
+    write_reg_1data(0xfe, 0x00);            //选择第0页
+
+    write_reg_1data(0x05, H8(row_s));
+    write_reg_1data(0x06, L8(row_s));
+    write_reg_1data(0x07, H8(col_s));
+    write_reg_1data(0x08, L8(col_s));
+    write_reg_1data(0x09, H8(win_h + 8));
+    write_reg_1data(0x0a, L8(win_h + 8));
+    write_reg_1data(0x0b, H8(win_w + 8));
+    write_reg_1data(0x0c, L8(win_w + 8));
+
+    write_reg_1data(0xfe, 0x01);            //选择第1页
+
+    set_reg_bits(0x53, 7, 0x01, 1);
+    set_reg_bits(0x55, 0, 0x01, 1);
+    write_reg_1data(0x54, cfg->reg0x54);
+    write_reg_1data(0x56, cfg->reg0x56);
+    write_reg_1data(0x57, cfg->reg0x57);
+    write_reg_1data(0x58, cfg->reg0x58);
+    write_reg_1data(0x59, cfg->reg0x59);    //
+
+    write_reg_1data(0xfe, 0x00);
+
+#elif CONFIG_GC_SENSOR_WINDOWING_MODE
     // 定义寄存器地址和数据数组
     rt_uint8_t reg_data[][2] = {
         {0xfe, 0x00},
@@ -145,8 +211,9 @@ static void set_framesize(framesize_t framesize) // 设置帧尺寸函数
         {0x0b, H8(w + 8)},
         {0x0c, L8(w + 8)}
     };
-
     write_regs(reg_data, sizeof(reg_data)/(sizeof(rt_uint8_t) * 2));
+#endif
+    LOG_I("Set frame size to: %d*%d", w, h);
 }
 
 /* DCMI接收到一桢数据后产生帧事件中断，调用此回调函数 */
@@ -200,7 +267,14 @@ void GC0308_Reponse_Callback(void *parameter)
 
     if(GC0308_ReadPID() == RT_EOK)          //读取摄像头ID
     {
+        if(rt_mutex_take(camera_device_t.lock, RT_WAITING_FOREVER) != RT_EOK)       //上锁
+            LOG_E("Failed to obtain the mutex\r\n");
         GC0308_Reset();
+        rt_mutex_release(camera_device_t.lock);                                     //解锁
+        write_reg_1data(RESET_RELATED, 0x00);   //寄存器选择第0页
+#if 1
+        set_reg_bits(0x28, 4, 0x07, 1);  //frequency division for esp32, ensure pclk <= 15MHz
+#endif
         set_framesize(FRAMESIZE_320x240_QVGA);
         set_pixformat(PIXFORMAT_RGB565);
         ret = RT_EOK;
@@ -251,26 +325,25 @@ void Take_Picture(int argc, rt_uint8_t *argv[])
 {
     __HAL_DCMI_ENABLE_IT(camera_device_t.dcmi, DCMI_IT_FRAME);  //使用帧中断
     memset((void *)JpegBuffer,0,pictureBufferLength * 4);       //把接收BUF清空
-    HAL_DCMI_Start_DMA(camera_device_t.dcmi, DCMI_MODE_SNAPSHOT,(rt_uint32_t)JpegBuffer, pictureBufferLength);//启动拍照
-    rt_thread_mdelay(50);
+    HAL_DCMI_Start_DMA(camera_device_t.dcmi, DCMI_MODE_SNAPSHOT,(rt_uint32_t)JpegBuffer, pictureBufferLength);//启动拍照    DCMI结构体指针 DCMI捕获模式 目标内存缓冲区地址 要传输的捕获长度
+    rt_thread_mdelay(100);
 
     if(rt_sem_take(&dcmi_sem, RT_WAITING_FOREVER) == RT_EOK)
     {
         HAL_DCMI_Suspend(camera_device_t.dcmi);   //拍照完成，挂起DCMI
+        rt_thread_mdelay(100);
         HAL_DCMI_Stop(camera_device_t.dcmi);      //拍照完成，停止DMA传输
         int pictureLength =pictureBufferLength;
-        while(pictureLength > 0)        //循环计算出接收的JPEG的大小
-        {
-            if(JpegBuffer[pictureLength-1] != 0x00000000)
-                break;
-            pictureLength--;
-        }
+//        while(pictureLength > 0)        //循环计算出接收的JPEG的大小
+//        {
+//            if(JpegBuffer[pictureLength-1] != 0x00000000)
+//                break;
+//            pictureLength--;
+//        }
         pictureLength *= 4;//buf是uint32_t，下面发送是uint8_t,所以长度要*4
 
-//            if(rt_mutex_take(camera_device_t.lock, RT_WAITING_FOREVER) != RT_EOK)       //上锁
-//                LOG_E("Failed to obtain the mutex\r\n");
         rt_device_write(camera_device_t.uart, 0, (rt_uint8_t*)JpegBuffer, pictureLength);
-//            rt_mutex_release(camera_device_t.lock);                                     //解锁
+
     }
 }
 
