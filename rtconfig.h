@@ -179,6 +179,13 @@
 
 /* enhanced kernel services */
 
+#define PKG_USING_RT_VSNPRINTF_FULL
+#define RT_VSNPRINTF_FULL_REPLACING_SPRINTF
+#define RT_VSNPRINTF_FULL_REPLACING_SNPRINTF
+#define RT_VSNPRINTF_FULL_REPLACING_PRINTF
+#define RT_VSNPRINTF_FULL_REPLACING_VSPRINTF
+#define RT_VSNPRINTF_FULL_REPLACING_VSNPRINTF
+#define PKG_USING_RT_VSNPRINTF_FULL_LATEST_VERSION
 /* end of enhanced kernel services */
 
 /* acceleration: Assembly language or algorithmic acceleration packages */

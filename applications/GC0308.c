@@ -58,8 +58,8 @@ static rt_err_t GC0308_ReadPID(void)
 static void GC0308_Reset(void)// 传感器复位函数
 {
     write_regs(gc0308_sensor_default_regs, sizeof(gc0308_sensor_default_regs)/(sizeof(rt_uint8_t) * 2));
-    LOG_I("Camera defaults loaded");
-    rt_thread_mdelay(20);
+    LOG_I("相机加载默认模式");
+//    LOG_I("Camera defaults loaded");
 }
 
 static void set_pixformat(pixformat_t pixformat)   // 设置像素格式函数
@@ -152,6 +152,7 @@ static void set_framesize(framesize_t framesize) // 设置帧尺寸函数
     };
     uint16_t win_w = 640;   //窗口宽度
     uint16_t win_h = 480;   //窗口高度
+    float ratio;
     const struct subsample_cfg *cfg = NULL; //指向当前使用的子采样配置
 
     /*策略:尽量保持最大的视角*/
@@ -165,8 +166,10 @@ static void set_framesize(framesize_t framesize) // 设置帧尺寸函数
             win_h = (h * cfg->ratio_denominator / cfg->ratio_numerator);          //窗口高度=指定高度*样本比率的倒数
             row_s = ((resolution[FRAMESIZE_640x480_VGA].height - win_h) / 2);     //起始列=(最大图像高度-窗口高度)/2
             col_s = ((resolution[FRAMESIZE_640x480_VGA].width - win_w) / 2);      //起始行=(最大图像宽度-窗口宽度)/2
-            LOG_I("subsample win:%d*%d", win_w, win_h);
-//            LOG_I("subsample win:%d*%d, ratio:%f", win_w, win_h, (float)cfg->ratio_numerator / (float)cfg->ratio_denominator);
+//            LOG_I("subsample win:%d*%d", win_w, win_h);
+            ratio = (float)cfg->ratio_numerator / (float)cfg->ratio_denominator;
+            LOG_I("子窗口大小:%d*%d, 窗口比例:%.2f", win_w, win_h, ratio);
+//            LOG_I("subsample window:%d*%d, ratio:%f", win_w, win_h, ratio);
             break;
         }
     }
@@ -213,7 +216,8 @@ static void set_framesize(framesize_t framesize) // 设置帧尺寸函数
     };
     write_regs(reg_data, sizeof(reg_data)/(sizeof(rt_uint8_t) * 2));
 #endif
-    LOG_I("Set frame size to: %d*%d", w, h);
+    LOG_I("设置帧大小: %d*%d", w, h);
+//    LOG_I("Set frame size to: %d*%d", w, h);
 }
 
 /* DCMI接收到一桢数据后产生帧事件中断，调用此回调函数 */
@@ -271,6 +275,7 @@ void GC0308_Reponse_Callback(void *parameter)
             LOG_E("Failed to obtain the mutex\r\n");
         GC0308_Reset();
         rt_mutex_release(camera_device_t.lock);                                     //解锁
+        rt_thread_mdelay(20);
         write_reg_1data(RESET_RELATED, 0x00);   //寄存器选择第0页
 #if 1
         set_reg_bits(0x28, 4, 0x07, 1);  //frequency division for esp32, ensure pclk <= 15MHz

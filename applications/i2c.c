@@ -38,13 +38,13 @@ rt_err_t write_reg(rt_uint8_t reg, rt_uint8_t len, rt_uint8_t *buf)      //写 �
         ret = rt_i2c_transfer(camera_device_t.i2c, msgs, 2);
 
         if(ret != 2)
-//            rt_thread_mdelay(1);
         {
             rt_thread_mdelay(2);
-            LOG_E("写1位      失败  '%d'  寄存器'%02x' 数据'%02x' ", ret, reg, *buf);
+            LOG_E("写1位      失败  '%ld'   寄存器'%02x' 数据'%02x' ", ret, reg, *buf);
         }
+//            rt_thread_mdelay(1);
 //        else
-//            LOG_I("写1位      成功  '%d'  寄存器'%02x' 数据'%02x' ", ret, reg, *buf);
+//            LOG_I("写1位      成功  '%ld'  寄存器'%02x' 数据'%02x' ", ret, reg, *buf);
     }while(ret != 2);
 
     return RT_EOK;
@@ -54,122 +54,6 @@ rt_err_t write_reg_1data(rt_uint8_t reg, rt_uint8_t buf)      //写 寄存器地
 {
     return write_reg(reg, 1, &buf);
 }
-
-
-//void write_regs(const rt_uint8_t regs[][2], size_t regs_size) //写多个命令
-//{
-//    int i = 0;
-//    struct rt_i2c_msg msgs[2];
-//    rt_uint8_t read_val;
-//
-//    while (i < regs_size)
-//    {
-//        int retry_count = 0;
-//        do {
-//            // Write operation
-//            msgs[0].addr = GC0308_SCCB_ADDR >> 1;
-//            msgs[0].flags = RT_I2C_WR | RT_I2C_NO_STOP;
-//            msgs[0].buf = (rt_uint8_t *)&regs[i][0];
-//            msgs[0].len = 1;
-//
-//            msgs[1].addr = GC0308_SCCB_ADDR >> 1;
-//            msgs[1].flags = RT_I2C_WR | RT_I2C_NO_START;
-//            msgs[1].buf = (rt_uint8_t *)&regs[i][1];
-//            msgs[1].len = 1;
-//
-//            rt_i2c_transfer(camera_device_t.i2c, msgs, 2);
-//
-//            // Read operation
-//            msgs[0].addr = GC0308_SCCB_ADDR >> 1;
-//            msgs[0].flags = RT_I2C_WR | RT_I2C_NO_STOP;
-//            msgs[0].buf = (rt_uint8_t *)&regs[i][0];
-//            msgs[0].len = 1;
-//
-//            msgs[1].addr = GC0308_SCCB_ADDR >> 1;
-//            msgs[1].flags = RT_I2C_RD;
-//            msgs[1].buf = &read_val;
-//            msgs[1].len = 1;
-//
-//            rt_i2c_transfer(camera_device_t.i2c, msgs, 2);
-//
-//            // Compare the read value with the value to be written
-//            if (read_val == regs[i][1]) {
-//                break; // If the values match, break the loop and continue to the next register
-//            }
-//
-//            // Retry if the values do not match
-//            retry_count++;
-//        } while (retry_count < 5);
-////        } while (retry_count < MAX_RETRY_COUNT);
-//        i++;
-//    }
-//}
-
-//void write_regs(const rt_uint8_t regs[][2], size_t regs_size) //写多个命令
-//{
-//    int i = 0;
-//    struct rt_i2c_msg msgs[2];
-//
-//    while (i < regs_size)
-//    {
-//        //设备地址 -- 寄存器号
-//        msgs[0].addr = GC0308_SCCB_ADDR>>1;
-//        msgs[0].flags = RT_I2C_WR | RT_I2C_NO_STOP;
-//        msgs[0].buf = (rt_uint8_t *)&regs[i][0];
-//        msgs[0].len = 1;
-//
-//        //打算往寄存器里写什么
-//        msgs[1].addr = GC0308_SCCB_ADDR>>1;
-//        msgs[1].flags = RT_I2C_WR | RT_I2C_NO_START;
-//        msgs[1].buf = (rt_uint8_t *)&regs[i][1];
-//        msgs[1].len = 1;
-//
-//
-//        if (rt_i2c_transfer(camera_device_t.i2c, msgs, 2) == 2)
-//        {
-//            return RT_EOK;
-//        }
-//        else
-//        {
-//            return -RT_ERROR;
-//        }
-//
-//        rt_i2c_transfer(camera_device_t.i2c, msgs, 2);
-//        i++;
-//    }
-//}
-
-//rt_err_t write_regs(const rt_uint8_t regs[][2], size_t regs_size) //写多个命令
-//{
-//    int i = 0;
-//    rt_err_t ret = -RT_ERROR;
-//    struct rt_i2c_msg msgs[2];
-//
-//    while (i < regs_size)
-//    {
-//        //设备地址 -- 寄存器号
-//        msgs[0].addr = GC0308_SCCB_ADDR>>1;
-//        msgs[0].flags = RT_I2C_WR | RT_I2C_NO_STOP;
-//        msgs[0].buf = (rt_uint8_t *)&regs[i][0];
-//        msgs[0].len = 1;
-//
-//        //打算往寄存器里写什么
-//        msgs[1].addr = GC0308_SCCB_ADDR>>1;
-//        msgs[1].flags = RT_I2C_WR | RT_I2C_NO_START;
-//        msgs[1].buf = (rt_uint8_t *)&regs[i][1];
-//        msgs[1].len = 1;
-//
-//        ret = rt_i2c_transfer(camera_device_t.i2c, msgs, 2);
-//
-//        if(ret != 2)
-//        {
-////            LOG_E("write_regs  output '%d'", ret);
-//            return -RT_ERROR;
-//        }
-//        i++;
-//    }
-//    return RT_EOK;
-//}
 
 rt_err_t write_regs(const rt_uint8_t regs[][2], size_t regs_size) //写多个命令
 {
@@ -191,14 +75,14 @@ rt_err_t write_regs(const rt_uint8_t regs[][2], size_t regs_size) //写多个命
 //            rt_thread_mdelay(1);
         {
             i--;
-            LOG_E("写多位     失败       '%d'    寄存器'%02x' 数据'%02x' ", ret, regs[i][0], regs[i][1]);
+            LOG_E("写多位     失败       '%ld'    寄存器'%02x' 数据'%02x' ", ret, regs[i][0], regs[i][1]);
             rt_thread_mdelay(2);
         }
 //        else
-//            LOG_I("写多位     成功       '%d'    寄存器'%02x' 数据'%02x' ", ret, regs[i][0], regs[i][1]);
+//            LOG_I("写多位     成功       '%ld'    寄存器'%02x' 数据'%02x' ", ret, regs[i][0], regs[i][1]);
 
 //        if((regs[i][0] == 0xfe) && ret == 1)
-//            LOG_I("写多位     成功       '%d'    寄存器'%02x' 数据'%02x' ", ret, regs[i][0], regs[i][1]);
+//            LOG_I("写多位     成功       '%ld'    寄存器'%02x' 数据'%02x' ", ret, regs[i][0], regs[i][1]);
 
         i++;
     }
@@ -234,13 +118,13 @@ rt_err_t set_reg_bits(rt_uint8_t reg, rt_uint8_t offset, rt_uint8_t mask, rt_uin
         ret = rt_i2c_transfer(camera_device_t.i2c, msgs1, 2);
 
         if(ret != 2)
-            rt_thread_mdelay(1);
         {
-            LOG_E("读寄存器      失败   '%d'   寄存器'%02x' 数据'%02x' ", ret, reg, c_value);
+            LOG_E("读寄存器   失败   '%ld'       寄存器'%02x' 数据'%02x' ", ret, reg, c_value);
             rt_thread_mdelay(2);
         }
+//            rt_thread_mdelay(1);
 //        else
-//            LOG_I("读寄存器      成功   '%d'   寄存器'%02x' 数据'%02x' ", ret, reg, c_value);
+//            LOG_I("读寄存器      成功   '%ld'   寄存器'%02x' 数据'%02x' ", ret, reg, c_value);
 
     }while(ret != 2);
 
@@ -262,13 +146,13 @@ rt_err_t set_reg_bits(rt_uint8_t reg, rt_uint8_t offset, rt_uint8_t mask, rt_uin
         ret = rt_i2c_transfer(camera_device_t.i2c, msgs, 2);
 
         if(ret != 2)
-//            rt_thread_mdelay(1);
         {
-            LOG_E("写寄存器      失败      '%d'   寄存器'%02x' 数据'%02x' ", ret, reg, new_value);
+            LOG_E("写寄存器   失败      '%ld'   寄存器'%02x' 数据'%02x' ", ret, reg, new_value);
             rt_thread_mdelay(2);
         }
+//            rt_thread_mdelay(1);
 //        else
-//            LOG_I("写寄存器      成功      '%d'   寄存器'%02x' 数据'%02x' ", ret, reg, new_value);
+//            LOG_I("写寄存器      成功      '%ld'   寄存器'%02x' 数据'%02x' ", ret, reg, new_value);
     }while(ret != 2);
 
     return RT_EOK;
@@ -296,11 +180,11 @@ rt_err_t read_reg(rt_uint8_t reg, rt_uint8_t len, rt_uint8_t *buf)       //读 �
         if(ret != 2)
 //            rt_thread_mdelay(1);
         {
-            LOG_E("读1位      失败       '%d'   寄存器'%02x' 数据'%02x' ", ret, reg, *buf);
+            LOG_E("读1位      失败       '%ld'   寄存器'%02x' 数据'%02x' ", ret, reg, *buf);
             rt_thread_mdelay(2);
         }
 //        else
-//            LOG_I("读1位      成功       '%d'   寄存器'%02x' 数据'%02x' ", ret, reg, *buf);
+//            LOG_I("读1位      成功       '%ld'   寄存器'%02x' 数据'%02x' ", ret, reg, *buf);
     }while(ret != 2);
 
     return RT_EOK;
