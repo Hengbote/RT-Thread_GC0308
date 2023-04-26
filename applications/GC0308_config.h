@@ -78,8 +78,8 @@ static const rt_uint8_t gc0308_sensor_default_regs[][2] = {
      *      1：镜像翻转
      *      0：保持正常
      * */
-    {0x14, 0x10},
-//    {0x14, 0x13},
+//    {0x14, 0x10},
+    {0x14, 0x13},
 
     /* P0:0x15 CISCTL_mode2
      * [7:6] output_mode：此两位用于控制图像传感器的输出模式

@@ -6,18 +6,66 @@
 #include "i2c.h"
 
 #define CONFIG_GC_SENSOR_SUBSAMPLE_MODE 1   //子采样模式启用   否则就是窗口模式
-#define pictureBufferLength 48000
+//假设大小320*240=76800单位是2字节(16bit) 所需内存为38400(rt_uint32_t)
+#define pictureBufferLength 9600
+#define Binary_pictureBufferLength 19200
+//#define pictureBufferLength 48000
+#define subImageWidth 14
+#define subImageHeight 20
+#define inputWidth 160
+#define inputHeight 120
 
 #define DBG_TAG "GC0308"
 #define DBG_LVL DBG_INFO
 #include <rtdbg.h>
 
 static rt_uint32_t JpegBuffer[pictureBufferLength];
+static rt_uint16_t Binary_JpegBuffer[Binary_pictureBufferLength];
 extern DCMI_HandleTypeDef hdcmi;
 extern DMA_HandleTypeDef handle_GPDMA1_Channel0;
 extern Camera_Structure camera_device_t;    //摄像头设备
 rt_thread_t camera_response_t;              //摄像头任务结构体
 static struct rt_semaphore dcmi_sem;        //DCMI帧事件中断 回调函数信号量
+//rt_uint32_t *JpegBuffer = (rt_uint32_t *)malloc(pictureBufferLength);   //分配动态内存
+
+rt_uint8_t subImages[(inputWidth / subImageWidth) * (inputHeight / subImageHeight)][subImageWidth * subImageHeight];    //子图像
+
+void binary_threshold_rgb565(rt_uint16_t *imageBuffer, int width, int height) {
+    int size = width * height;
+
+    for (int i = 0; i < size; i++) {
+        rt_uint16_t pixel = imageBuffer[i];
+
+        // 提取RGB分量
+        rt_uint8_t red = (pixel & 0xF800) >> 11;
+        rt_uint8_t green = (pixel & 0x07E0) >> 5;
+        rt_uint8_t blue = (pixel & 0x001F);
+
+        // 二值化处理 96
+        if (red + green/2 + blue >= 50)
+            Binary_JpegBuffer[i] = 0xFFFF; // 设置为白色
+        else
+            Binary_JpegBuffer[i] = 0x0000; // 设置为黑色
+    }
+}
+
+void split_image_into_subimages(uint8_t *inputImage, uint8_t subImages[][subImageWidth * subImageHeight]) {
+    int rows = inputHeight - subImageHeight + 1;
+    int cols = inputWidth - subImageWidth + 1;
+
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < cols; c++) {
+            for (int y = 0; y < subImageHeight; y++) {
+                for (int x = 0; x < subImageWidth; x++) {
+                    int inputIdx = (r + y) * inputWidth + (c + x);
+                    int subImageIdx = y * subImageWidth + x;
+                    subImages[r * cols + c][subImageIdx] = inputImage[inputIdx];
+                }
+            }
+        }
+    }
+}
+
 
 const resolution_info_t resolution[FRAMESIZE_INVALID] = {
     {   96,   96, ASPECT_RATIO_1X1   }, /* 96x96 */
@@ -80,44 +128,6 @@ static void set_pixformat(pixformat_t pixformat)   // 设置像素格式函数
             break;
     }
 }
-
-//static void set_framesize(framesize_t framesize) // 设置帧尺寸函数
-//{
-//    // 获取指定帧尺寸的宽度和高度
-//    rt_uint16_t w = resolution[framesize].width;
-//    rt_uint16_t h = resolution[framesize].height;
-//
-//    // 计算起始列和行，以使图像居中
-//    rt_uint16_t col_s = (resolution[FRAMESIZE_VGA].width - w) / 2;
-//    rt_uint16_t row_s = (resolution[FRAMESIZE_VGA].height - h) / 2;
-//
-//    // 设置第0页寄存器
-//    write_reg_1data(0xfe, 0x00);
-//
-//    // 设置大窗口左列和左行（除以4，因为寄存器中的值表示4倍）
-//    write_reg_1data(0xf7, col_s / 4);
-//    write_reg_1data(0xf8, row_s / 4);
-//
-//    // 设置大窗口右列和右行（除以4，因为寄存器中的值表示4倍）
-//    write_reg_1data(0xf9, (col_s + h) / 4);
-//    write_reg_1data(0xfa, (row_s + w) / 4);
-//
-//    // 设置像素阵列的起始行
-//    write_reg_1data(0x05, H8(row_s));
-//    write_reg_1data(0x06, L8(row_s));
-//
-//    // 设置像素阵列的起始列
-//    write_reg_1data(0x07, H8(col_s));
-//    write_reg_1data(0x08, L8(col_s));
-//
-//    // 设置图像高度（加上8，因为寄存器默认值为488，而实际高度为480）
-//    write_reg_1data(0x09, H8(h + 8));
-//    write_reg_1data(0x0a, L8(h + 8));
-//
-//    // 设置图像宽度（加上8，因为寄存器默认值为648，而实际宽度为640）
-//    write_reg_1data(0x0b, H8(w + 8));
-//    write_reg_1data(0x0c, L8(w + 8));
-//}
 
 static void set_framesize(framesize_t framesize) // 设置帧尺寸函数
 {
@@ -280,7 +290,7 @@ void GC0308_Reponse_Callback(void *parameter)
 #if 1
         set_reg_bits(0x28, 4, 0x07, 1);  //frequency division for esp32, ensure pclk <= 15MHz
 #endif
-        set_framesize(FRAMESIZE_320x240_QVGA);
+        set_framesize(FRAMESIZE_160x120_QQVGA);
         set_pixformat(PIXFORMAT_RGB565);
         ret = RT_EOK;
     }
@@ -329,8 +339,14 @@ void GC0308_Reponse(void)
 void Take_Picture(int argc, rt_uint8_t *argv[])
 {
     __HAL_DCMI_ENABLE_IT(camera_device_t.dcmi, DCMI_IT_FRAME);  //使用帧中断
+//    if (JpegBuffer == NULL) {
+//        LOG_E("图像内存分配失败");
+////        LOG_E("Image memory allocation failed");
+//        break;
+//    }
     rt_memset((void *)JpegBuffer,0,pictureBufferLength * 4);       //把接收BUF清空
     HAL_DCMI_Start_DMA(camera_device_t.dcmi, DCMI_MODE_SNAPSHOT,(rt_uint32_t)JpegBuffer, pictureBufferLength);//启动拍照    DCMI结构体指针 DCMI捕获模式 目标内存缓冲区地址 要传输的捕获长度
+//    memmove((void *)JpegBuffer, (void *)JpegBuffer + 9600, 9600*4);
 
     if(rt_sem_take(&dcmi_sem, RT_WAITING_FOREVER) == RT_EOK)
     {
@@ -343,11 +359,18 @@ void Take_Picture(int argc, rt_uint8_t *argv[])
 //                break;
 //            pictureLength--;
 //        }
-        pictureLength *= 2;
-        rt_device_write(camera_device_t.uart, 0, (rt_uint16_t*)JpegBuffer, pictureLength);
+        pictureLength *= 4;
+        rt_device_write(camera_device_t.uart, 0, (rt_uint8_t*)JpegBuffer, pictureLength);
 
     }
 }
 
+void Binary_image(int argc, rt_uint8_t *argv[])
+{
+    binary_threshold_rgb565((rt_uint16_t*)JpegBuffer, 160, 120);
+    rt_device_write(camera_device_t.uart, 0, (rt_uint8_t*)Binary_JpegBuffer, pictureBufferLength*4);
+}
+
 /* 导出到 msh 命令列表中 */
 MSH_CMD_EXPORT(Take_Picture, Take a picture);
+MSH_CMD_EXPORT(Binary_image, Binary image);
