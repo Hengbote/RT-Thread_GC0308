@@ -6,13 +6,13 @@
 #include "i2c.h"
 
 #define CONFIG_GC_SENSOR_SUBSAMPLE_MODE 1   //子采样模式启用   否则就是窗口模式
-#define pictureBufferLength 38400
-static uint32_t JpegBuffer[pictureBufferLength];
+#define pictureBufferLength 48000
 
 #define DBG_TAG "GC0308"
 #define DBG_LVL DBG_INFO
 #include <rtdbg.h>
 
+static rt_uint32_t JpegBuffer[pictureBufferLength];
 extern DCMI_HandleTypeDef hdcmi;
 extern DMA_HandleTypeDef handle_GPDMA1_Channel0;
 extern Camera_Structure camera_device_t;    //摄像头设备
@@ -161,10 +161,10 @@ static void set_framesize(framesize_t framesize) // 设置帧尺寸函数
         if ((win_w * cfg->ratio_numerator / cfg->ratio_denominator >= w) &&     //如果 窗口宽度*样本比率>=指定宽度   并且
             (win_h * cfg->ratio_numerator / cfg->ratio_denominator >= h))       //窗口高度*样本比率>=指定高度
         {
-            win_w = w * cfg->ratio_denominator / cfg->ratio_numerator;          //窗口宽度=指定宽度*样本比率的倒数
-            win_h = h * cfg->ratio_denominator / cfg->ratio_numerator;          //窗口高度=指定高度*样本比率的倒数
-            row_s = (resolution[FRAMESIZE_640x480_VGA].height - win_h) / 2;     //起始列=(最大图像高度-窗口高度)/2
-            col_s = (resolution[FRAMESIZE_640x480_VGA].width - win_w) / 2;      //起始行=(最大图像宽度-窗口宽度)/2
+            win_w = (w * cfg->ratio_denominator / cfg->ratio_numerator);          //窗口宽度=指定宽度*样本比率的倒数
+            win_h = (h * cfg->ratio_denominator / cfg->ratio_numerator);          //窗口高度=指定高度*样本比率的倒数
+            row_s = ((resolution[FRAMESIZE_640x480_VGA].height - win_h) / 2);     //起始列=(最大图像高度-窗口高度)/2
+            col_s = ((resolution[FRAMESIZE_640x480_VGA].width - win_w) / 2);      //起始行=(最大图像宽度-窗口宽度)/2
             LOG_I("subsample win:%d*%d", win_w, win_h);
 //            LOG_I("subsample win:%d*%d, ratio:%f", win_w, win_h, (float)cfg->ratio_numerator / (float)cfg->ratio_denominator);
             break;
@@ -324,14 +324,12 @@ void GC0308_Reponse(void)
 void Take_Picture(int argc, rt_uint8_t *argv[])
 {
     __HAL_DCMI_ENABLE_IT(camera_device_t.dcmi, DCMI_IT_FRAME);  //使用帧中断
-    memset((void *)JpegBuffer,0,pictureBufferLength * 4);       //把接收BUF清空
+    rt_memset((void *)JpegBuffer,0,pictureBufferLength * 4);       //把接收BUF清空
     HAL_DCMI_Start_DMA(camera_device_t.dcmi, DCMI_MODE_SNAPSHOT,(rt_uint32_t)JpegBuffer, pictureBufferLength);//启动拍照    DCMI结构体指针 DCMI捕获模式 目标内存缓冲区地址 要传输的捕获长度
-    rt_thread_mdelay(100);
 
     if(rt_sem_take(&dcmi_sem, RT_WAITING_FOREVER) == RT_EOK)
     {
         HAL_DCMI_Suspend(camera_device_t.dcmi);   //拍照完成，挂起DCMI
-        rt_thread_mdelay(100);
         HAL_DCMI_Stop(camera_device_t.dcmi);      //拍照完成，停止DMA传输
         int pictureLength =pictureBufferLength;
 //        while(pictureLength > 0)        //循环计算出接收的JPEG的大小
@@ -340,9 +338,8 @@ void Take_Picture(int argc, rt_uint8_t *argv[])
 //                break;
 //            pictureLength--;
 //        }
-        pictureLength *= 4;//buf是uint32_t，下面发送是uint8_t,所以长度要*4
-
-        rt_device_write(camera_device_t.uart, 0, (rt_uint8_t*)JpegBuffer, pictureLength);
+        pictureLength *= 2;
+        rt_device_write(camera_device_t.uart, 0, (rt_uint16_t*)JpegBuffer, pictureLength);
 
     }
 }
