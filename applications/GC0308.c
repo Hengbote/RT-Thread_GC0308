@@ -8,8 +8,7 @@
 #define DBG_LVL DBG_INFO
 #include <rtdbg.h>
 
-rt_uint32_t JpegBuffer[pictureBufferLength];
-//rt_uint16_t Binary_JpegBuffer[Binary_pictureBufferLength];
+rt_uint32_t JpegBuffer[PICTURE_BUFFER_LENGTH];
 extern DCMI_HandleTypeDef hdcmi;
 extern DMA_HandleTypeDef handle_GPDMA1_Channel0;
 extern Camera_Structure camera_device_t;    //摄像头设备
@@ -68,7 +67,7 @@ static void GC0308_Reset(void)// 传感器复位函数
 #endif
 }
 
-static void set_pixformat(pixformat_t pixformat)   // 设置像素格式函数
+static void Set_Pixformat(pixformat_t pixformat)   // 设置像素格式函数
 {
     switch (pixformat) {
         case PIXFORMAT_RGB565:
@@ -87,7 +86,7 @@ static void set_pixformat(pixformat_t pixformat)   // 设置像素格式函数
     }
 }
 
-static void set_framesize(framesize_t framesize) // 设置帧尺寸函数
+static void Set_Frame_Size(framesize_t framesize) // 设置帧尺寸函数
 {
     rt_uint16_t w = resolution[framesize].width;    //指定帧尺寸的宽度
     rt_uint16_t h = resolution[framesize].height;   //指定帧尺寸的高度
@@ -193,8 +192,8 @@ static rt_err_t GC0308_Register_Init(void)  //GC0308寄存器初始化
     if(GC0308_ReadPID() == RT_EOK)          //读取摄像头ID
     {
         GC0308_Reset();
-        set_framesize(FRAMESIZE_160x120_QQVGA);
-        set_pixformat(PIXFORMAT_RGB565);
+        Set_Frame_Size(FRAME_SIZE);
+        Set_Pixformat(PIXFORMAT_RGB565);
         return RT_EOK;
     }
     else
@@ -248,6 +247,8 @@ void GC0308_Reponse_Callback(void *parameter)
     rt_device_open(camera_device_t.uart, RT_DEVICE_OFLAG_WRONLY);   //打开摄像头串口输出设备 只读
     rt_sem_init(&dcmi_sem, "dcmi_sem", 0, RT_IPC_FLAG_FIFO);        //初始化帧事件信号量 先进先出模式
 
+    LOG_I("%d", PICTURE_BUFFER_LENGTH);
+
     ret = GC0308_Register_Init();    //GC0308寄存器初始化
 
     while(ret == RT_EOK)
@@ -290,15 +291,15 @@ void GC0308_Reponse(void)
 void Take_Picture(int argc, rt_uint8_t *argv[])
 {
     __HAL_DCMI_ENABLE_IT(camera_device_t.dcmi, DCMI_IT_FRAME);  //使用帧中断
-    rt_memset((void *)JpegBuffer,0,pictureBufferLength * 4);       //把接收BUF清空
-    HAL_DCMI_Start_DMA(camera_device_t.dcmi, DCMI_MODE_SNAPSHOT,(rt_uint32_t)JpegBuffer, pictureBufferLength);//启动拍照    DCMI结构体指针 DCMI捕获模式 目标内存缓冲区地址 要传输的捕获长度
-//    memmove((void *)JpegBuffer, (void *)JpegBuffer + 9600, 9600*4);
+    rt_memset((void *)JpegBuffer,0,PICTURE_BUFFER_LENGTH * 4);       //把接收BUF清空
+    //启动拍照    DCMI结构体指针 DCMI捕获模式 目标内存缓冲区地址 要传输的捕获长度
+    HAL_DCMI_Start_DMA(camera_device_t.dcmi, DCMI_MODE_SNAPSHOT,(rt_uint32_t)JpegBuffer, PICTURE_BUFFER_LENGTH);    //启动拍照
 
     if(rt_sem_take(&dcmi_sem, RT_WAITING_FOREVER) == RT_EOK)
     {
         HAL_DCMI_Suspend(camera_device_t.dcmi);   //拍照完成，挂起DCMI
         HAL_DCMI_Stop(camera_device_t.dcmi);      //拍照完成，停止DMA传输
-        int pictureLength =pictureBufferLength;
+        int pictureLength = PICTURE_BUFFER_LENGTH;
 //        while(pictureLength > 0)        //循环计算出接收的JPEG的大小
 //        {
 //            if(JpegBuffer[pictureLength-1] != 0x00000000)

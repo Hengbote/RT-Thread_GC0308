@@ -3,6 +3,6 @@
 
 #include "stm32u5xx_hal.h"
 
-void Image_Recognition_Reponse(void);  //图像识别任务调用
+void Image_Recognition_Reponse(void);  //图像识别任务调用函数
 
 #endif /* APPLICATIONS_IMAGE_RECOGNITION_H_ */

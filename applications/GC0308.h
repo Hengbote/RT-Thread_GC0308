@@ -2,14 +2,30 @@
 #define APPLICATIONS_GC0308_H_
 
 #include "stm32u5xx_hal.h"
+#include "GC0308_config.h"
 
 #define CONFIG_GC_SENSOR_SUBSAMPLE_MODE 1   //子采样模式启用   否则就是窗口模式
-/*
- * 假设大小320*240=76800单位是2字节(16bit) 所需内存为38400(rt_uint32_t)
- * 串口输出1字节(8bit)
- * */
-#define pictureBufferLength 9600
-#define Binary_pictureBufferLength 19200
+
+extern const resolution_info_t resolution[FRAMESIZE_INVALID];
+
+/*要改图片大小改这里*/
+#define FRAME_SIZE FRAMESIZE_96X96  //图片大小
+#define PICTURE_SIZE(framesize) (\
+    (framesize) == FRAMESIZE_96X96              ? 96 * 96 : \
+    (framesize) == FRAMESIZE_160x120_QQVGA      ? 160 * 120 : \
+    (framesize) == FRAMESIZE_176x144_QCIF       ? 176 * 144 : \
+    (framesize) == FRAMESIZE_240x176_HQVGA      ? 240 * 176 : \
+    (framesize) == FRAMESIZE_240x240            ? 240 * 240 : \
+    (framesize) == FRAMESIZE_320x240_QVGA       ? 320 * 240 : \
+    (framesize) == FRAMESIZE_400x296_CIF        ? 400 * 296 : \
+    (framesize) == FRAMESIZE_480x320_HVGA       ? 480 * 320 : \
+    (framesize) == FRAMESIZE_640x480_VGA        ? 640 * 480 : 0\
+)
+/*图片缓冲长度
+ * 假设大小320*240=76800单位是2字节(16bit)
+ * 所需内存为38400(rt_uint32_t)
+ * 串口输出1字节(8bit)*/
+#define PICTURE_BUFFER_LENGTH (PICTURE_SIZE(FRAME_SIZE)/2)  //图片缓冲长度
 
 /*
  * P0 (0xfe) 相机模块的复位与寄存器页面选择寄存器
@@ -27,42 +43,6 @@
 
 #define H8(v) ((v)>>8)
 #define L8(v) ((v)&0xff)
-
-typedef enum {
-    FRAMESIZE_96X96,            // 96x96
-    FRAMESIZE_160x120_QQVGA,    // 160x120
-    FRAMESIZE_176x144_QCIF,     // 176x144
-    FRAMESIZE_240x176_HQVGA,    // 240x176
-    FRAMESIZE_240x240_240X240,  // 240x240
-    FRAMESIZE_320x240_QVGA,     // 320x240
-    FRAMESIZE_400x296_CIF,      // 400x296
-    FRAMESIZE_480x320_HVGA,     // 480x320
-    FRAMESIZE_640x480_VGA,      // 640x480
-    FRAMESIZE_INVALID
-} framesize_t;
-
-typedef enum {
-    ASPECT_RATIO_4X3,
-    ASPECT_RATIO_3X2,
-    ASPECT_RATIO_16X10,
-    ASPECT_RATIO_5X3,
-    ASPECT_RATIO_16X9,
-    ASPECT_RATIO_21X9,
-    ASPECT_RATIO_5X4,
-    ASPECT_RATIO_1X1,
-    ASPECT_RATIO_9X16
-} aspect_ratio_t;
-
-typedef enum {
-    PIXFORMAT_RGB565,    // 2BPP/RGB565
-    PIXFORMAT_YUV422,    // 2BPP/YUV422
-} pixformat_t;
-
-typedef struct {
-        const rt_uint16_t width;            //宽
-        const rt_uint16_t height;           //高
-        const aspect_ratio_t aspect_ratio;  //长宽比
-} resolution_info_t;
 
 void HAL_DCMI_FrameEventCallback(DCMI_HandleTypeDef *hdcmi);     //帧事件中断 回调函数
 void GC0308_Reponse(void);  //任务调用

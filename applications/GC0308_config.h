@@ -1,6 +1,42 @@
 #ifndef APPLICATIONS_GC0308_CONFIG_H_
 #define APPLICATIONS_GC0308_CONFIG_H_
 
+typedef enum {
+    FRAMESIZE_96X96,            // 96x96
+    FRAMESIZE_160x120_QQVGA,    // 160x120
+    FRAMESIZE_176x144_QCIF,     // 176x144
+    FRAMESIZE_240x176_HQVGA,    // 240x176
+    FRAMESIZE_240x240,          // 240x240
+    FRAMESIZE_320x240_QVGA,     // 320x240
+    FRAMESIZE_400x296_CIF,      // 400x296
+    FRAMESIZE_480x320_HVGA,     // 480x320
+    FRAMESIZE_640x480_VGA,      // 640x480
+    FRAMESIZE_INVALID
+} framesize_t;
+
+typedef enum {
+    ASPECT_RATIO_4X3,
+    ASPECT_RATIO_3X2,
+    ASPECT_RATIO_16X10,
+    ASPECT_RATIO_5X3,
+    ASPECT_RATIO_16X9,
+    ASPECT_RATIO_21X9,
+    ASPECT_RATIO_5X4,
+    ASPECT_RATIO_1X1,
+    ASPECT_RATIO_9X16
+} aspect_ratio_t;
+
+typedef enum {
+    PIXFORMAT_RGB565,    // 2BPP/RGB565
+    PIXFORMAT_YUV422,    // 2BPP/YUV422
+} pixformat_t;
+
+typedef struct {
+        const rt_uint16_t width;            //宽
+        const rt_uint16_t height;           //高
+        const aspect_ratio_t aspect_ratio;  //长宽比
+} resolution_info_t;
+
 static const rt_uint8_t gc0308_sensor_default_regs[][2] = {
 
     /*
