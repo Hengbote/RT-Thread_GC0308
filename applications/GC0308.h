@@ -3,6 +3,14 @@
 
 #include "stm32u5xx_hal.h"
 
+#define CONFIG_GC_SENSOR_SUBSAMPLE_MODE 1   //子采样模式启用   否则就是窗口模式
+/*
+ * 假设大小320*240=76800单位是2字节(16bit) 所需内存为38400(rt_uint32_t)
+ * 串口输出1字节(8bit)
+ * */
+#define pictureBufferLength 9600
+#define Binary_pictureBufferLength 19200
+
 /*
  * P0 (0xfe) 相机模块的复位与寄存器页面选择寄存器
  * Bit[7] (soft_reset): 软复位位 将此位设置为 1 以触发模块的软复位 复位完成后 此位将自动清零

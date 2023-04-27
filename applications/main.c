@@ -1,13 +1,3 @@
-/*
- * Copyright (c) 2006-2023, RT-Thread Development Team
- *
- * SPDX-License-Identifier: Apache-2.0
- *
- * Change Logs:
- * Date           Author       Notes
- * 2023-03-25     RT-Thread    first version
- */
-
 #include <rtthread.h>
 #include <rtdevice.h>
 #include "pin_config.h"
@@ -16,8 +6,9 @@
     #include "i2c_Bare.h"
 #else
     #include "i2c.h"
-#include "GC0308.h"
 #endif
+#include "GC0308.h"
+#include "image_recognition.h"
 
 
 #define DBG_TAG "main"
