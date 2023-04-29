@@ -8,7 +8,7 @@
 #define DBG_LVL DBG_INFO
 #include <rtdbg.h>
 
-rt_uint32_t JpegBuffer[PICTURE_BUFFER_LENGTH];
+rt_uint32_t JpegBuffer[PICTURE_BUFFER_LENGTH];  //图片缓冲
 extern DCMI_HandleTypeDef hdcmi;
 extern DMA_HandleTypeDef handle_GPDMA1_Channel0;
 extern Camera_Structure camera_device_t;    //摄像头设备

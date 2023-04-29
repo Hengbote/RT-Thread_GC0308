@@ -9,7 +9,7 @@
 extern const resolution_info_t resolution[FRAMESIZE_INVALID];
 
 /*要改图片大小改这里*/
-#define FRAME_SIZE FRAMESIZE_96X96  //图片大小
+#define FRAME_SIZE FRAMESIZE_160x120_QQVGA  //图片大小
 #define PICTURE_SIZE(framesize) (\
     (framesize) == FRAMESIZE_96X96              ? 96 * 96 : \
     (framesize) == FRAMESIZE_160x120_QQVGA      ? 160 * 120 : \
