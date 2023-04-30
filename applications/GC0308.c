@@ -8,12 +8,12 @@
 #define DBG_LVL DBG_INFO
 #include <rtdbg.h>
 
-rt_uint32_t JpegBuffer[PICTURE_BUFFER_LENGTH];  //图片缓冲
+rt_uint16_t JpegBuffer[INPUT_WIDTH][INPUT_HEIGHT];  //图片缓冲
 extern DCMI_HandleTypeDef hdcmi;
 extern DMA_HandleTypeDef handle_GPDMA1_Channel0;
-extern Camera_Structure camera_device_t;    //摄像头设备
-rt_thread_t camera_response_t;              //摄像头任务结构体
-static struct rt_semaphore dcmi_sem;        //DCMI帧事件中断 回调函数信号量
+extern Camera_Structure camera_device_t;        //摄像头设备
+rt_thread_t camera_response_t;                  //摄像头任务结构体
+static struct rt_semaphore dcmi_sem;            //DCMI帧事件中断 回调函数信号量
 
 const resolution_info_t resolution[FRAMESIZE_INVALID] = {
     {   96,   96, ASPECT_RATIO_1X1   }, /* 96x96 */
@@ -244,8 +244,10 @@ void GC0308_Reponse_Callback(void *parameter)
     if(camera_device_t.dcmi     == RT_NULL)
         LOG_E("Cannot find camera device on DCMI");
 
-    rt_device_open(camera_device_t.uart, RT_DEVICE_OFLAG_WRONLY);   //打开摄像头串口输出设备 只读
-    rt_sem_init(&dcmi_sem, "dcmi_sem", 0, RT_IPC_FLAG_FIFO);        //初始化帧事件信号量 先进先出模式
+    rt_device_open(camera_device_t.uart, RT_DEVICE_OFLAG_WRONLY);                                       //打开摄像头串口输出设备 只读
+    rt_err_t result = rt_sem_init(&dcmi_sem, "dcmi_sem", 0, RT_IPC_FLAG_FIFO);                          //初始化帧事件信号量 先进先出模式
+    if (result != RT_EOK)
+        LOG_E("Failed to initialize the semaphore");
 
     LOG_I("%d", PICTURE_BUFFER_LENGTH);
 
@@ -291,7 +293,7 @@ void GC0308_Reponse(void)
 void Take_Picture(int argc, rt_uint8_t *argv[])
 {
     __HAL_DCMI_ENABLE_IT(camera_device_t.dcmi, DCMI_IT_FRAME);  //使用帧中断
-    rt_memset((void *)JpegBuffer,0,PICTURE_BUFFER_LENGTH * 4);       //把接收BUF清空
+    rt_memset((void *)JpegBuffer,0,PICTURE_BUFFER_LENGTH * sizeof(rt_uint32_t));  //把接收BUF清空
     //启动拍照    DCMI结构体指针 DCMI捕获模式 目标内存缓冲区地址 要传输的捕获长度
     HAL_DCMI_Start_DMA(camera_device_t.dcmi, DCMI_MODE_SNAPSHOT,(rt_uint32_t)JpegBuffer, PICTURE_BUFFER_LENGTH);    //启动拍照
 
@@ -299,15 +301,7 @@ void Take_Picture(int argc, rt_uint8_t *argv[])
     {
         HAL_DCMI_Suspend(camera_device_t.dcmi);   //拍照完成，挂起DCMI
         HAL_DCMI_Stop(camera_device_t.dcmi);      //拍照完成，停止DMA传输
-        int pictureLength = PICTURE_BUFFER_LENGTH;
-//        while(pictureLength > 0)        //循环计算出接收的JPEG的大小
-//        {
-//            if(JpegBuffer[pictureLength-1] != 0x00000000)
-//                break;
-//            pictureLength--;
-//        }
-        pictureLength *= 4;
-        rt_device_write(camera_device_t.uart, 0, JpegBuffer, pictureLength);
+        rt_device_write(camera_device_t.uart, 0, JpegBuffer, PICTURE_BUFFER_LENGTH * sizeof(rt_uint32_t));
 //        rt_device_write(camera_device_t.uart, 0, (rt_uint8_t*)JpegBuffer, pictureLength);
 
     }

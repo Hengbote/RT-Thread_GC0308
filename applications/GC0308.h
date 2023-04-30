@@ -10,22 +10,40 @@ extern const resolution_info_t resolution[FRAMESIZE_INVALID];
 
 /*要改图片大小改这里*/
 #define FRAME_SIZE FRAMESIZE_160x120_QQVGA  //图片大小
-#define PICTURE_SIZE(framesize) (\
-    (framesize) == FRAMESIZE_96X96              ? 96 * 96 : \
-    (framesize) == FRAMESIZE_160x120_QQVGA      ? 160 * 120 : \
-    (framesize) == FRAMESIZE_176x144_QCIF       ? 176 * 144 : \
-    (framesize) == FRAMESIZE_240x176_HQVGA      ? 240 * 176 : \
-    (framesize) == FRAMESIZE_240x240            ? 240 * 240 : \
-    (framesize) == FRAMESIZE_320x240_QVGA       ? 320 * 240 : \
-    (framesize) == FRAMESIZE_400x296_CIF        ? 400 * 296 : \
-    (framesize) == FRAMESIZE_480x320_HVGA       ? 480 * 320 : \
-    (framesize) == FRAMESIZE_640x480_VGA        ? 640 * 480 : 0\
+
+/*图像宽*/
+#define INPUTWIDTH(framesize) (\
+    (framesize) == FRAMESIZE_96X96              ? 96  : \
+    (framesize) == FRAMESIZE_160x120_QQVGA      ? 160 : \
+    (framesize) == FRAMESIZE_176x144_QCIF       ? 176 : \
+    (framesize) == FRAMESIZE_240x176_HQVGA      ? 240 : \
+    (framesize) == FRAMESIZE_240x240            ? 240 : \
+    (framesize) == FRAMESIZE_320x240_QVGA       ? 320 : \
+    (framesize) == FRAMESIZE_400x296_CIF        ? 400 : \
+    (framesize) == FRAMESIZE_480x320_HVGA       ? 480 : \
+    (framesize) == FRAMESIZE_640x480_VGA        ? 640 : 0\
 )
+
+/*图像高*/
+#define INPUTHEIGHT(framesize) (\
+    (framesize) == FRAMESIZE_96X96              ? 96  : \
+    (framesize) == FRAMESIZE_160x120_QQVGA      ? 120 : \
+    (framesize) == FRAMESIZE_176x144_QCIF       ? 144 : \
+    (framesize) == FRAMESIZE_240x176_HQVGA      ? 176 : \
+    (framesize) == FRAMESIZE_240x240            ? 240 : \
+    (framesize) == FRAMESIZE_320x240_QVGA       ? 240 : \
+    (framesize) == FRAMESIZE_400x296_CIF        ? 296 : \
+    (framesize) == FRAMESIZE_480x320_HVGA       ? 320 : \
+    (framesize) == FRAMESIZE_640x480_VGA        ? 480 : 0\
+)
+
+#define INPUT_WIDTH  INPUTWIDTH(FRAME_SIZE)      //图像宽
+#define INPUT_HEIGHT INPUTHEIGHT(FRAME_SIZE)     //图像高
 /*图片缓冲长度
  * 假设大小320*240=76800单位是2字节(16bit)
  * 所需内存为38400(rt_uint32_t)
  * 串口输出1字节(8bit)*/
-#define PICTURE_BUFFER_LENGTH (PICTURE_SIZE(FRAME_SIZE)/2)  //图片缓冲长度
+#define PICTURE_BUFFER_LENGTH ((INPUT_WIDTH/2) * INPUT_HEIGHT)  //图片缓冲长度
 
 /*
  * P0 (0xfe) 相机模块的复位与寄存器页面选择寄存器
