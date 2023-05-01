@@ -249,8 +249,6 @@ void GC0308_Reponse_Callback(void *parameter)
     if (result != RT_EOK)
         LOG_E("Failed to initialize the semaphore");
 
-    LOG_I("%d", PICTURE_BUFFER_LENGTH);
-
     ret = GC0308_Register_Init();    //GC0308寄存器初始化
 
     while(ret == RT_EOK)
