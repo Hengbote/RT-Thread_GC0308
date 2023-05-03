@@ -13,7 +13,8 @@ extern DCMI_HandleTypeDef hdcmi;
 extern DMA_HandleTypeDef handle_GPDMA1_Channel0;
 extern Camera_Structure camera_device_t;        //摄像头设备
 rt_thread_t camera_response_t;                  //摄像头任务结构体
-static struct rt_semaphore dcmi_sem;            //DCMI帧事件中断 回调函数信号量
+struct rt_semaphore dcmi_sem;            //DCMI帧事件中断 回调函数信号量
+//static struct rt_semaphore dcmi_sem;            //DCMI帧事件中断 回调函数信号量
 
 const resolution_info_t resolution[FRAMESIZE_INVALID] = {
     {   96,   96, ASPECT_RATIO_1X1   }, /* 96x96 */
