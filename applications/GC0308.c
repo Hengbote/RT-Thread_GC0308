@@ -300,10 +300,12 @@ void Take_Picture(int argc, rt_uint8_t *argv[])
     {
         HAL_DCMI_Suspend(camera_device_t.dcmi);   //拍照完成，挂起DCMI
         HAL_DCMI_Stop(camera_device_t.dcmi);      //拍照完成，停止DMA传输
-        rt_device_write(camera_device_t.uart, 0, JpegBuffer, PICTURE_BUFFER_LENGTH * sizeof(rt_uint32_t));
-//        rt_device_write(camera_device_t.uart, 0, (rt_uint8_t*)JpegBuffer, pictureLength);
-
     }
+
+    if(argc == 1)
+        rt_device_write(camera_device_t.uart, 0, JpegBuffer, PICTURE_BUFFER_LENGTH * sizeof(rt_uint32_t));
+    else if(argc == 2)
+        LOG_I("Photo taken successfully\r\n");
 }
 
 /* 导出到 msh 命令列表中 */
