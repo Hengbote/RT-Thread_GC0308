@@ -124,106 +124,126 @@ static void Split_An_Image_Into_Subimages(rt_uint8_t (*subImages)[SUBIMAGE_ROW][
     }
 }
 
-static rt_uint8_t bilinear_interpolation(rt_uint8_t (*image)[SUBIMAGE_ROW][SUBIMAGE_COLUMN], int old_width, int old_height, float x_ratio, float y_ratio, int x, int y)    // 双线性插值函数
+static void resize_image(rt_uint8_t (*image)[SUBIMAGE_ROW][SUBIMAGE_COLUMN], rt_uint8_t (*resized_image)[STANDARD_IMAGE_HEIGHT][STANDARD_IMAGE_WIDTH], int column, int row, int new_column, int new_row)       //缩放图片
 {
-    int x1 = (int)(((x + 0.5)/ x_ratio) - 0.5);
-    int y1 = (int)(((y + 0.5)/ y_ratio) - 0.5);
-    int x2 = x1 + 1;
-    int y2 = y1 + 1;
+    float scale_x = (float)(column) / new_column;     //缩放宽比例
+    float scale_y = (float)(row) / new_row;   //缩放长比例
 
-    float x_diff = (x_ratio * x) - x1;
-    float y_diff = (y_ratio * y) - y1;
+//    LOG_I("(scale_x = %f) = (column=%d)/(new_column=%d)", scale_x, column, new_column);
+//    LOG_I("(scale_y = %f) = (row=%d)/(new_row=%d)", scale_y, row, new_row);
 
-    rt_uint8_t intensity = (rt_uint8_t)(
-        (*image)[y1][x1] * (1 - x_diff) * (1 - y_diff) +
-        (*image)[y1][x2] * x_diff * (1 - y_diff) +
-        (*image)[y2][x1] * (1 - x_diff) * y_diff +
-        (*image)[y2][x2] * x_diff * y_diff);
+//    rt_device_write(camera_device_t.uart, 0, *image, sizeof(*image));
 
-    return intensity;
-}
+    //((f(NewX,NewY)*(1-x)+f(NewX+1,NewY)*x)*(1-y)+(f(NewX,NewY+1)*(1-x)+f(NewX+1,NewY+1)*x)*y)>>22
+    for (int j = 0; j < new_row; ++j){                 //遍历目标图像(输入)的所有行
+        float PosY = (float)((j + 0.5) * scale_y - 0.5);      //计算源图像中对应的行坐标
+        int NewY = (int)PosY;               //向下取整
+        int PartY, InvY;
 
-static void resize_image(rt_uint8_t (*image)[SUBIMAGE_ROW][SUBIMAGE_COLUMN], rt_uint8_t (*resized_image)[STANDARD_IMAGE_WIDTH][STANDARD_IMAGE_HEIGHT], int old_width, int old_height, int new_width, int new_height)       //缩放图片
-{
-    float x_ratio = (float)(old_width) / new_width;
-    float y_ratio = (float)(old_height) / new_height;
+//        LOG_I("(PosY=%f)=(j+0.5=%.2f)*(scale_y=%.3f)-0.5", PosY, (float)j+0.5, scale_y);
 
-    for (int y = 0; y < new_height; y++)
-    {
-        for (int x = 0; x < new_width; x++)
-        {
-            (*resized_image)[y][x] = bilinear_interpolation(image, old_width, old_height, x_ratio, y_ratio, x, y);
+        if (NewY < 0)                   //NewY不要超出行索引
+            PartY = 0, NewY = 0;
+        if (NewY >= row - 1)
+            PartY = 0, NewY = row - 2;
+
+        PartY = max(((PosY - NewY) * 2048), 0); //对应表达式中的Y
+        InvY = 2048 - PartY;                    //对应表达式中的1-Y
+//        LOG_I("(PartY=%d)=((PosY=%f)-(NewY=%d))*2048    (InvY=%d)=2048-PartY\n", PartY, PosY, NewY, InvY);
+
+
+        for (int i = 0; i < new_column; ++i){  //遍历目标图像(输入)的所有列
+
+               float PosX = (float)((i + 0.5) * scale_x - 0.5);
+               int NewX = (int)PosX;
+               int PartX, InvX;
+
+               if (NewX < 0)                   //NewX不要超出行索引
+                   PartX = 0, NewX = 0;
+               if (NewX >= column - 1)
+                   PartX = 0, NewX = column - 2;
+
+               PartX = max(((PosX - NewX) * 2048), 0);  //对应表达式中的X
+               InvX = 2048 - PartX;                     //对应表达式中的1-X
+
+//               LOG_I("(PosX=%f)=(i+0.5=%.2f)*(scale_x=%.3f)-0.5", PosX, (float)i+0.5, scale_x);
+
+               (*resized_image)[j][i] = (
+                       ((*image)[NewX][NewY] * InvX + (*image)[NewX][NewY + 1] * PartX) * InvY +
+                       ((*image)[NewX + 1][NewY] * InvX + (*image)[NewX + 1][NewY + 1] * PartX) * PartY
+                       )>>22;
         }
+//        LOG_I("\n");
     }
 }
 
-rt_uint8_t Variance_ariance_Digital_Recognition(rt_uint8_t (*image)[SUBIMAGE_ROW][SUBIMAGE_COLUMN])  //方差判断数字
-{
-    rt_int32_t standard_mun_one = 0;
-    rt_int32_t standard_mun_two = 0;
-    rt_int32_t standard_mun_three = 0;
-    rt_int32_t standard_mun_four = 0;
-    rt_int32_t standard_mun_five = 0;
-    rt_int32_t standard_mun_six = 0;
-    rt_int32_t standard_mun_seven = 0;
-    rt_int32_t standard_mun_eight = 0;
-    rt_int32_t standard_mun_nine = 0;
-    rt_int32_t standard_mun_ten = 0;
-
-    for(int i = 0; i < SUBIMAGE_ROW; i++)
-    {
-        for(int j = 0; j < SUBIMAGE_COLUMN; j++)
-        {
-            standard_mun_one   += ((*image)[i][j] - standard_one[i][j]);
-            standard_mun_two   += ((*image)[i][j] - standard_two[i][j]);
-            standard_mun_three += ((*image)[i][j] - standard_three[i][j]);
-            standard_mun_four  += ((*image)[i][j] - standard_four[i][j]);
-            standard_mun_five  += ((*image)[i][j] - standard_five[i][j]);
-            standard_mun_six   += ((*image)[i][j] - standard_six[i][j]);
-            standard_mun_seven += ((*image)[i][j] - standard_seven[i][j]);
-            standard_mun_eight += ((*image)[i][j] - standard_eight[i][j]);
-            standard_mun_nine  += ((*image)[i][j] - standard_nine[i][j]);
-            standard_mun_ten   += ((*image)[i][j] - standard_ten[i][j]);
-        }
-    }
-
-//    if(standard_mun_one < 1)
-//        return 1;
-//    else if(standard_mun_two   < 1)
-//        return 2;
-//    else if(standard_mun_three < 1)
-//        return 3;
-//    else if(standard_mun_four  < 1)
-//        return 4;
-//    else if(standard_mun_five  < 1)
-//        return 5;
-//    else if(standard_mun_six   < 1)
-//        return 6;
-//    else if(standard_mun_seven < 1000)
+//rt_uint8_t Variance_ariance_Digital_Recognition(rt_uint8_t (*image)[SUBIMAGE_ROW][SUBIMAGE_COLUMN])  //方差判断数字
+//{
+//    rt_int32_t standard_mun_one = 0;
+//    rt_int32_t standard_mun_two = 0;
+//    rt_int32_t standard_mun_three = 0;
+//    rt_int32_t standard_mun_four = 0;
+//    rt_int32_t standard_mun_five = 0;
+//    rt_int32_t standard_mun_six = 0;
+//    rt_int32_t standard_mun_seven = 0;
+//    rt_int32_t standard_mun_eight = 0;
+//    rt_int32_t standard_mun_nine = 0;
+//    rt_int32_t standard_mun_ten = 0;
+//
+//    for(int i = 0; i < SUBIMAGE_ROW; i++)
+//    {
+//        for(int j = 0; j < SUBIMAGE_COLUMN; j++)
+//        {
+//            standard_mun_one   += ((*image)[i][j] - standard_one[i][j]);
+//            standard_mun_two   += ((*image)[i][j] - standard_two[i][j]);
+//            standard_mun_three += ((*image)[i][j] - standard_three[i][j]);
+//            standard_mun_four  += ((*image)[i][j] - standard_four[i][j]);
+//            standard_mun_five  += ((*image)[i][j] - standard_five[i][j]);
+//            standard_mun_six   += ((*image)[i][j] - standard_six[i][j]);
+//            standard_mun_seven += ((*image)[i][j] - standard_seven[i][j]);
+//            standard_mun_eight += ((*image)[i][j] - standard_eight[i][j]);
+//            standard_mun_nine  += ((*image)[i][j] - standard_nine[i][j]);
+//            standard_mun_ten   += ((*image)[i][j] - standard_ten[i][j]);
+//        }
+//    }
+//
+////    if(standard_mun_one < 1)
+////        return 1;
+////    else if(standard_mun_two   < 1)
+////        return 2;
+////    else if(standard_mun_three < 1)
+////        return 3;
+////    else if(standard_mun_four  < 1)
+////        return 4;
+////    else if(standard_mun_five  < 1)
+////        return 5;
+////    else if(standard_mun_six   < 1)
+////        return 6;
+////    else if(standard_mun_seven < 1000)
+////        return 7;
+////    else if(standard_mun_eight < 1)
+////        return 8;
+////    else if(standard_mun_nine  < 1)
+////        return 9;
+////    else if(standard_mun_ten   < 1)
+////        return 0;
+//    LOG_I("standard_mun_seven = %d", standard_mun_seven);
+//    if(standard_mun_seven < 1000)
 //        return 7;
-//    else if(standard_mun_eight < 1)
-//        return 8;
-//    else if(standard_mun_nine  < 1)
-//        return 9;
-//    else if(standard_mun_ten   < 1)
-//        return 0;
-    LOG_I("standard_mun_seven = %d", standard_mun_seven);
-    if(standard_mun_seven < 1000)
-        return 7;
-    else
-        return -1;
-}
+//    else
+//        return -1;
+//}
 
-void Split_Image_Into_Subimages(rt_uint8_t column, rt_uint8_t row)  //分割图像
+void Split_Image_Into_Subimages(rt_uint8_t column, rt_uint8_t row)
 {
-//    rt_uint16_t inputImage_row_subimage    = INPUT_WIDTH  - SUBIMAGE_COLUMN + 1;    //输入图像中每行中子图像数
+//    rt_uint16_t inputImage_row_subimage    = INPUT_WIDTH  - SUBIMAGE_COLUMN + 1;    //输入图像中每行中子图像数(子图像=裁剪后的图像)
 //    rt_uint16_t inputImage_column_subimage = INPUT_HEIGHT - SUBIMAGE_ROW    + 1;    //输入图像中每列中子图像数
     rt_uint8_t (*subImages)[SUBIMAGE_ROW][SUBIMAGE_COLUMN] = (rt_uint8_t (*)[SUBIMAGE_ROW][SUBIMAGE_COLUMN])rt_malloc(SUBIMAGE_ROW * SUBIMAGE_COLUMN * sizeof(rt_uint8_t)); //子图像动态内存
-    rt_uint8_t (*resized_subImage)[STANDARD_IMAGE_WIDTH][STANDARD_IMAGE_HEIGHT] = (rt_uint8_t (*)[STANDARD_IMAGE_WIDTH][STANDARD_IMAGE_HEIGHT])rt_malloc(STANDARD_IMAGE_WIDTH * STANDARD_IMAGE_HEIGHT * sizeof(rt_uint8_t)); //缩放后的图像动态内存
+    rt_uint8_t (*resized_subImage)[STANDARD_IMAGE_HEIGHT][STANDARD_IMAGE_WIDTH] = (rt_uint8_t (*)[STANDARD_IMAGE_HEIGHT][STANDARD_IMAGE_WIDTH])rt_malloc(STANDARD_IMAGE_HEIGHT * STANDARD_IMAGE_WIDTH * sizeof(rt_uint8_t)); //缩放后的图像动态内存
 
 //    int recognition_result = -1;    //识别结果标识位
 
-    if ((subImages == NULL) || (resized_subImage == NULL)) {
+    if ((subImages == NULL) || (resized_subImage == NULL)) {    //判断内存是否成功申请
         LOG_E("Failed to allocate memory for subImages or resized_subImage\n");return;}
 
 //    for (int column = 0; column < inputImage_column_subimage; column++) {       //历遍每列中子图像
@@ -231,11 +251,12 @@ void Split_Image_Into_Subimages(rt_uint8_t column, rt_uint8_t row)  //分割图�
 
             Split_An_Image_Into_Subimages(subImages, column, row);  //分割子图像
 
-            LOG_I("column = %d, row = %d", column, row);
+            LOG_I("row = %d, column = %d", row, column);
 
 //            resize_image((*subImages), (rt_uint8_t (*)[STANDARD_IMAGE_WIDTH][STANDARD_IMAGE_HEIGHT])resized_subImage, SUBIMAGE_COLUMN, SUBIMAGE_ROW, STANDARD_IMAGE_WIDTH, STANDARD_IMAGE_HEIGHT);
             resize_image(subImages, resized_subImage, SUBIMAGE_COLUMN, SUBIMAGE_ROW, STANDARD_IMAGE_WIDTH, STANDARD_IMAGE_HEIGHT);  //缩放图片
-            rt_device_write(camera_device_t.uart, 0, *resized_subImage, sizeof(*resized_subImage));        //输出子图像
+            rt_device_write(camera_device_t.uart, 0, *resized_subImage, sizeof(*resized_subImage));        //输出缩放图
+//            rt_device_write(camera_device_t.uart, 0, *subImages, sizeof(*subImages));        //输出子图像
 
 //            recognition_result = Digital_Recognition(subImages);            //方差判断数字 子图像
 //            recognition_result = Digital_Recognition(resized_subImage);     //方差判断数字 缩放后的图像
@@ -280,19 +301,17 @@ void Color_Channel(int argc, rt_uint8_t *argv[])    //提取色彩通道命令
 
 void Gray_Scale(int argc, rt_uint8_t *argv[])	    //灰度调整命令
 {
-    __HAL_DCMI_ENABLE_IT(camera_device_t.dcmi, DCMI_IT_FRAME);  //使用帧中断
-    rt_memset((void *)JpegBuffer,0,PICTURE_BUFFER_LENGTH * sizeof(rt_uint32_t));  //把接收BUF清空
-    //启动拍照    DCMI结构体指针 DCMI捕获模式 目标内存缓冲区地址 要传输的捕获长度
-    HAL_DCMI_Start_DMA(camera_device_t.dcmi, DCMI_MODE_SNAPSHOT,(rt_uint32_t)JpegBuffer, PICTURE_BUFFER_LENGTH);    //启动拍照
+    const char *take = "Take_Picture";
+    const char *no = "No_output";
+    rt_uint8_t *string[2] = {(rt_uint8_t *)take, (rt_uint8_t *)no};
 
-    if(rt_sem_take(&dcmi_sem, RT_WAITING_FOREVER) == RT_EOK)
-    {
-        HAL_DCMI_Suspend(camera_device_t.dcmi);   //拍照完成，挂起DCMI
-        HAL_DCMI_Stop(camera_device_t.dcmi);      //拍照完成，停止DMA传输
-    }
-
+    Take_Picture(2, string);
     Gray_Scale_Rgb565();
-    rt_device_write(camera_device_t.uart, 0, (rt_uint8_t *)Gray_Scale_JpegBuffer, PICTURE_BUFFER_LENGTH*2);     //输出灰度调整后的图像
+
+    if(argc == 1)
+        rt_device_write(camera_device_t.uart, 0, (rt_uint8_t *)Gray_Scale_JpegBuffer, PICTURE_BUFFER_LENGTH*2);     //输出灰度调整后的图像
+    else if(argc == 2)
+        LOG_I("Binary image successfully\r\n");
 }
 
 void Binary_Image(int argc, rt_uint8_t *argv[])     //二值化命令
@@ -310,15 +329,22 @@ void Binary_Image(int argc, rt_uint8_t *argv[])     //二值化命令
 
 void SubImages_An(int argc, rt_uint8_t *argv[])     //分割子图像
 {
+    const char *gray = "Gray_Scale";
+    const char *no = "No_output";
+    rt_uint8_t *string[2] = {(rt_uint8_t *)gray, (rt_uint8_t *)no};
     rt_uint8_t (*subImages)[SUBIMAGE_ROW][SUBIMAGE_COLUMN] = (rt_uint8_t (*)[SUBIMAGE_ROW][SUBIMAGE_COLUMN])rt_malloc(SUBIMAGE_ROW * SUBIMAGE_COLUMN * sizeof(rt_uint8_t)); //子图像动态内存
 
     if(argc != 3)
+    {
+        Gray_Scale(2, string);
         Split_An_Image_Into_Subimages(subImages, 0, 0);
+    }
     else if(argc == 3)
     {
         rt_uint8_t inputImage_row = (rt_uint8_t)atoi((const char *)argv[1]);        //相当于子图像x轴位置
         rt_uint8_t inputImage_column = (rt_uint8_t)atoi((const char *)argv[2]);     //相当于子图像y轴位置
 
+        Gray_Scale(2, string);
         Split_An_Image_Into_Subimages(subImages, inputImage_column, inputImage_row);
     }
 
@@ -328,13 +354,21 @@ void SubImages_An(int argc, rt_uint8_t *argv[])     //分割子图像
 
 void Sub_Images(int argc, rt_uint8_t *argv[])
 {
+    const char *gray = "Gray_Scale";
+    const char *no = "No_output";
+    rt_uint8_t *string[2] = {(rt_uint8_t *)gray, (rt_uint8_t *)no};
+
     if(argc != 3)
+    {
+        Gray_Scale(2, string);
         Split_Image_Into_Subimages(0, 0);
+    }
     else if(argc == 3)
     {
         rt_uint8_t inputImage_row = (rt_uint8_t)atoi((const char *)argv[1]);
         rt_uint8_t inputImage_column = (rt_uint8_t)atoi((const char *)argv[2]);
 
+        Gray_Scale(2, string);
         Split_Image_Into_Subimages(inputImage_column, inputImage_row);
     }
 }
