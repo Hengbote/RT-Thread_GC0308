@@ -8,7 +8,8 @@
 #define DBG_LVL DBG_INFO
 #include <rtdbg.h>
 
-rt_uint16_t JpegBuffer[INPUT_WIDTH][INPUT_HEIGHT];  //图片缓冲
+rt_uint16_t JpegBuffer[INPUT_HEIGHT][INPUT_WIDTH];  //图片缓冲
+//rt_uint16_t JpegBuffer[INPUT_WIDTH][INPUT_HEIGHT];  //图片缓冲
 extern DCMI_HandleTypeDef hdcmi;
 extern DMA_HandleTypeDef handle_GPDMA1_Channel0;
 extern Camera_Structure camera_device_t;        //摄像头设备
@@ -130,11 +131,11 @@ static void Set_Frame_Size(framesize_t framesize) // 设置帧尺寸函数
         if ((win_w * cfg->ratio_numerator / cfg->ratio_denominator >= w) &&     //如果 窗口宽度*样本比率>=指定宽度   并且
             (win_h * cfg->ratio_numerator / cfg->ratio_denominator >= h))       //窗口高度*样本比率>=指定高度
         {
-            win_w = (w * cfg->ratio_denominator / cfg->ratio_numerator);          //窗口宽度=指定宽度*样本比率的倒数
-            win_h = (h * cfg->ratio_denominator / cfg->ratio_numerator);          //窗口高度=指定高度*样本比率的倒数
-            row_s = ((resolution[FRAMESIZE_640x480_VGA].height - win_h) / 2);     //起始列=(最大图像高度-窗口高度)/2
-            col_s = ((resolution[FRAMESIZE_640x480_VGA].width - win_w) / 2);      //起始行=(最大图像宽度-窗口宽度)/2
-//            LOG_I("subsample win:%d*%d", win_w, win_h);
+            win_w = (w * cfg->ratio_denominator / cfg->ratio_numerator);        //窗口宽度=指定宽度*样本比率的倒数
+            win_h = (h * cfg->ratio_denominator / cfg->ratio_numerator);        //窗口高度=指定高度*样本比率的倒数
+            row_s = (resolution[FRAMESIZE_640x480_VGA].height - win_h) / 2;     //起始列=(最大图像高度-窗口高度)/2
+            col_s = (resolution[FRAMESIZE_640x480_VGA].width - win_w) / 2;      //起始行=(最大图像宽度-窗口宽度)/2
+
             ratio = (float)cfg->ratio_numerator / (float)cfg->ratio_denominator;
             LOG_I("子窗口大小:%d*%d, 窗口比例:%.2f", win_w, win_h, ratio);
 //            LOG_I("subsample window:%d*%d, ratio:%f", win_w, win_h, ratio);
@@ -305,7 +306,7 @@ void Take_Picture(int argc, rt_uint8_t *argv[])
     if(argc == 1)
         rt_device_write(camera_device_t.uart, 0, JpegBuffer, PICTURE_BUFFER_LENGTH * sizeof(rt_uint32_t));
     else if(argc == 2)
-        LOG_I("Photo taken successfully\r\n");
+        LOG_I("Photo taken successfully");
 }
 
 /* 导出到 msh 命令列表中 */
