@@ -287,7 +287,8 @@ void GC0308_Reponse(void)
 {
     camera_response_t = rt_thread_create("camera_response_t", GC0308_Reponse_Callback, RT_NULL, 2048, 10, 10);
     if(camera_response_t!=RT_NULL)rt_thread_startup(camera_response_t);
-    LOG_I("I2C_Reponse Init Success\r\n");
+    LOG_I("I2C响应函数初始化成功");
+//    LOG_I("I2C_Reponse Init Success");
 }
 
 void Take_Picture(int argc, rt_uint8_t *argv[])
@@ -306,7 +307,8 @@ void Take_Picture(int argc, rt_uint8_t *argv[])
     if(argc == 1)
         rt_device_write(camera_device_t.uart, 0, JpegBuffer, PICTURE_BUFFER_LENGTH * sizeof(rt_uint32_t));
     else if(argc == 2)
-        LOG_I("Photo taken successfully");
+        LOG_I("拍照成功");
+//        LOG_I("Photo taken successfully");
 }
 
 /* 导出到 msh 命令列表中 */
