@@ -3,26 +3,25 @@
 
 #include "stm32u5xx_hal.h"
 
-#define SUBIMAGE_COLUMN 48   //历遍子图像列数(子图像宽)
-#define SUBIMAGE_ROW    48   //历遍子图像行数(子图像高)
-#define STANDARD_IMAGE_WIDTH    96   //标准图像宽
-#define STANDARD_IMAGE_HEIGHT   96   //标准图像高
-//#define SUBIMAGE_COLUMN 5   //历遍子图像列数(子图像宽)
-//#define SUBIMAGE_ROW    5   //历遍子图像行数(子图像高)
+#define SUBIMAGE_WIDTH          48  //历遍子图像列数(子图像宽)
+#define SUBIMAGE_HEIGHT         48  //历遍子图像行数(子图像高)
+#define STANDARD_IMAGE_WIDTH    96  //标准图像宽
+#define STANDARD_IMAGE_HEIGHT   96  //标准图像高
+//
+//#define SUBIMAGE_WIDTH          5   //历遍子图像列数(子图像宽)
+//#define SUBIMAGE_HEIGHT         5   //历遍子图像行数(子图像高)
 //#define STANDARD_IMAGE_WIDTH    3   //标准图像宽
 //#define STANDARD_IMAGE_HEIGHT   3   //标准图像高
-//#define SUBIMAGE_COLUMN 3   //历遍子图像列数(子图像宽)
-//#define SUBIMAGE_ROW    3   //历遍子图像行数(子图像高)
+//
+//#define SUBIMAGE_WIDTH          3   //历遍子图像列数(子图像宽)
+//#define SUBIMAGE_HEIGHT         3   //历遍子图像行数(子图像高)
 //#define STANDARD_IMAGE_WIDTH    5   //标准图像宽
-//#define STANDARD_IMAGE_HEIGHT   5  //标准图像高
-//#define SUBIMAGE_COLUMN 9   //历遍子图像列数(子图像宽)
-//#define SUBIMAGE_ROW    18   //历遍子图像行数(子图像高)
-//#define STANDARD_IMAGE_WIDTH    12   //标准图像宽
-//#define STANDARD_IMAGE_HEIGHT   20   //标准图像高
-//#define SUBIMAGE_COLUMN 11   //历遍子图像列数(子图像宽)
-//#define SUBIMAGE_ROW    18   //历遍子图像行数(子图像高)
-//#define STANDARD_IMAGE_WIDTH    12   //标准图像宽
-//#define STANDARD_IMAGE_HEIGHT   20   //标准图像高
+//#define STANDARD_IMAGE_HEIGHT   5   //标准图像高
+
+//#define SUBIMAGE_WIDTH          9   //历遍子图像列数(子图像宽)
+//#define SUBIMAGE_HEIGHT         18  //历遍子图像行数(子图像高)
+//#define STANDARD_IMAGE_WIDTH    12  //标准图像宽
+//#define STANDARD_IMAGE_HEIGHT   20  //标准图像高
 
 #define max(a,b) (((a) > (b)) ? (a) : (b))
 #define min(a,b) (((a) < (b)) ? (a) : (b))
@@ -32,13 +31,13 @@
 
 
 
-static const rt_uint8_t standard_one[SUBIMAGE_ROW][SUBIMAGE_COLUMN] = {};
-static const rt_uint8_t standard_two[SUBIMAGE_ROW][SUBIMAGE_COLUMN] = {};
-static const rt_uint8_t standard_three[SUBIMAGE_ROW][SUBIMAGE_COLUMN] = {};
-static const rt_uint8_t standard_four[SUBIMAGE_ROW][SUBIMAGE_COLUMN] = {};
-static const rt_uint8_t standard_five[SUBIMAGE_ROW][SUBIMAGE_COLUMN] = {};
-static const rt_uint8_t standard_six[SUBIMAGE_ROW][SUBIMAGE_COLUMN] = {};
-//static const rt_uint8_t standard_seven[SUBIMAGE_ROW][SUBIMAGE_COLUMN] = {   //7
+static const rt_uint8_t standard_one[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH] = {};
+static const rt_uint8_t standard_two[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH] = {};
+static const rt_uint8_t standard_three[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH] = {};
+static const rt_uint8_t standard_four[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH] = {};
+static const rt_uint8_t standard_five[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH] = {};
+static const rt_uint8_t standard_six[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH] = {};
+//static const rt_uint8_t standard_seven[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH] = {   //7
 //                        {0x84, 0x7D, 0x80, 0x6B, 0x6D, 0x71, 0x70, 0x6F, 0x69, 0x69, 0x64},
 //                        {0x7B, 0x76, 0x95, 0x8E, 0x91, 0x98, 0x91, 0x89, 0x92, 0x7A, 0x5D},
 //                        {0x62, 0x89, 0xAE, 0xA9, 0xA6, 0xA4, 0xA1, 0xA1, 0x9E, 0x85, 0x5C},
@@ -57,9 +56,9 @@ static const rt_uint8_t standard_six[SUBIMAGE_ROW][SUBIMAGE_COLUMN] = {};
 //                        {0x5E, 0x5B, 0x62, 0x72, 0x9A, 0x9B, 0x59, 0x48, 0x48, 0x46, 0x44},
 //                        {0x62, 0x5B, 0x62, 0x6A, 0x9E, 0x7E, 0x48, 0x4E, 0x4E, 0x49, 0x48},
 //                        {0x62, 0x63, 0x65, 0x6A, 0x61, 0x55, 0x58, 0x56, 0x50, 0x50, 0x4B},};
-static const rt_uint8_t standard_eight[SUBIMAGE_ROW][SUBIMAGE_COLUMN] = {};
-static const rt_uint8_t standard_nine[SUBIMAGE_ROW][SUBIMAGE_COLUMN] = {};
-static const rt_uint8_t standard_ten[SUBIMAGE_ROW][SUBIMAGE_COLUMN] = {};
+static const rt_uint8_t standard_eight[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH] = {};
+static const rt_uint8_t standard_nine[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH] = {};
+static const rt_uint8_t standard_ten[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH] = {};
 
 
 void Image_Recognition_Reponse(void);  //图像识别任务调用函数
