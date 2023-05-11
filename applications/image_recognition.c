@@ -90,12 +90,6 @@ static void Binary_Threshold_Rgb565(rt_uint8_t average)    //二值化
 
             pixel = ((JpegBuffer[col][row] & 0xFF00) >> 8) | ((JpegBuffer[col][row] & 0x00FF) << 8); //获得输入图像像素并调整字节顺序
 
-//            // 提取RGB565分量
-//            red     = (pixel & 0xF800) >> 11;
-//            green   = (pixel & 0x07E0) >> 5;
-//            blue    = (pixel & 0x001F);
-////            pixel_color = (red*2 + green + blue*2);
-//            pixel_color = (red + green + blue/3);             //3:6:1 R+G+B~100
             // 提取RGB565分量至RGB888
             red     = (pixel & 0xF800) >> 8;    //248
             green   = (pixel & 0x07E0) >> 3;    //252
@@ -128,7 +122,6 @@ static void Split_An_Image_Into_Subimages(  rt_uint8_t (*subImages)[SUBIMAGE_HEI
         }
     }
 }
-
 
 static void resize_image(   rt_uint8_t (*subImages)[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH],
                             rt_uint8_t (*resized_subImage)[STANDARD_IMAGE_HEIGHT][STANDARD_IMAGE_WIDTH],
@@ -250,23 +243,28 @@ void Split_Image_Into_Subimages(rt_uint8_t row, rt_uint8_t column)
 {
 //    rt_uint16_t inputImage_row_subimage    = INPUT_HEIGHT - SUBIMAGE_WIDTH + 1;    //子图像=裁剪后的图像
 //    rt_uint16_t inputImage_column_subimage = INPUT_WIDTH  - SUBIMAGE_HEIGHT    + 1;
-    rt_uint8_t (*subImages)[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH] = (rt_uint8_t (*)[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH])rt_malloc(SUBIMAGE_HEIGHT * SUBIMAGE_WIDTH * sizeof(rt_uint8_t)); //子图像动态内存
-    rt_uint8_t (*resized_subImage)[STANDARD_IMAGE_HEIGHT][STANDARD_IMAGE_WIDTH] = (rt_uint8_t (*)[STANDARD_IMAGE_HEIGHT][STANDARD_IMAGE_WIDTH])rt_malloc(STANDARD_IMAGE_HEIGHT * STANDARD_IMAGE_WIDTH * sizeof(rt_uint8_t)); //缩放后的图像动态内存
+
+    rt_uint8_t (*subImages)[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH] =
+            (rt_uint8_t (*)[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH])
+            rt_malloc(SUBIMAGE_HEIGHT * SUBIMAGE_WIDTH * sizeof(rt_uint8_t));               //子图像动态内存
+    if (subImages == NULL){    //判断子图像内存是否成功申请
+        LOG_E("Failed to allocate memory for subImages");return;}
+
+    rt_uint8_t (*resized_subImage)[STANDARD_IMAGE_HEIGHT][STANDARD_IMAGE_WIDTH] =
+            (rt_uint8_t (*)[STANDARD_IMAGE_HEIGHT][STANDARD_IMAGE_WIDTH])
+            rt_malloc(STANDARD_IMAGE_HEIGHT * STANDARD_IMAGE_WIDTH * sizeof(rt_uint8_t));   //缩放后的图像动态内存
+    if (resized_subImage == NULL){    //判断缩放图内存是否成功申请
+        LOG_E("Failed to allocate memory for resized_subImage");return;}
 
 //    int recognition_result = -1;    //识别结果标识位
-
-    if ((subImages == NULL) || (resized_subImage == NULL)) {    //判断内存是否成功申请
-        LOG_E("Failed to allocate memory for subImages or resized_subImage");return;}
 
 //    for (int column = 0; column < inputImage_column_subimage; column++) {
 //        for (int row = 0; row < inputImage_row_subimage; row++) {
 
-            Split_An_Image_Into_Subimages(subImages, row, column);  //分割子图像
-
-            resize_image(subImages, resized_subImage, SUBIMAGE_WIDTH, SUBIMAGE_HEIGHT, STANDARD_IMAGE_WIDTH, STANDARD_IMAGE_HEIGHT);  //缩放图片
-
-//            rt_device_write(camera_device_t.uart, 0, *subImages, sizeof(*subImages));        //输出子图像
-            rt_device_write(camera_device_t.uart, 0, *resized_subImage, sizeof(*resized_subImage));        //输出缩放图
+            Split_An_Image_Into_Subimages(subImages, row, column);                                                                      //分割子图像
+            resize_image(subImages, resized_subImage, SUBIMAGE_WIDTH, SUBIMAGE_HEIGHT, STANDARD_IMAGE_WIDTH, STANDARD_IMAGE_HEIGHT);    //缩放图片
+//            rt_device_write(camera_device_t.uart, 0, *subImages, sizeof(*subImages));                                                   //输出子图像
+            rt_device_write(camera_device_t.uart, 0, *resized_subImage, sizeof(*resized_subImage));                                     //输出缩放图
 
 //            recognition_result = Digital_Recognition(subImages);            //方差判断数字 子图像
 //            recognition_result = Digital_Recognition(resized_subImage);     //方差判断数字 缩放后的图像
@@ -343,8 +341,12 @@ void SubImages_An(int argc, rt_uint8_t *argv[])     //分割子图像
     const char *gray = "Gray_Scale";
     const char *no = "No_output";
     rt_uint8_t *string[2] = {(rt_uint8_t *)gray, (rt_uint8_t *)no};
-//    rt_uint8_t (*subImages)[SUBIMAGE_WIDTH][SUBIMAGE_HEIGHT] = (rt_uint8_t (*)[SUBIMAGE_WIDTH][SUBIMAGE_HEIGHT])rt_malloc(SUBIMAGE_WIDTH * SUBIMAGE_HEIGHT * sizeof(rt_uint8_t)); //子图像动态内存
-    rt_uint8_t (*subImages)[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH] = (rt_uint8_t (*)[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH])rt_malloc(SUBIMAGE_HEIGHT * SUBIMAGE_WIDTH * sizeof(rt_uint8_t)); //子图像动态内存
+
+    rt_uint8_t (*subImages)[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH] =
+            (rt_uint8_t (*)[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH])
+            rt_malloc(SUBIMAGE_HEIGHT * SUBIMAGE_WIDTH * sizeof(rt_uint8_t)); //子图像动态内存
+    if (subImages == NULL){    //判断子图像内存是否成功申请
+        LOG_E("Failed to allocate memory for subImages");return;}
 
     if(argc != 3)
     {
@@ -356,7 +358,7 @@ void SubImages_An(int argc, rt_uint8_t *argv[])     //分割子图像
     }
     else if(argc == 3)
     {
-        rt_uint8_t inputImage_row = (rt_uint8_t)atoi((const char *)argv[1]);        //相当于子图像x轴位置
+        rt_uint8_t inputImage_row    = (rt_uint8_t)atoi((const char *)argv[1]);        //相当于子图像x轴位置
         rt_uint8_t inputImage_column = (rt_uint8_t)atoi((const char *)argv[2]);     //相当于子图像y轴位置
 
         Gray_Scale(2, string);
@@ -365,6 +367,47 @@ void SubImages_An(int argc, rt_uint8_t *argv[])     //分割子图像
 
     rt_device_write(camera_device_t.uart, 0, *subImages, sizeof(*subImages));        //输出子图像
     rt_free(subImages);     //释放子图像内存
+}
+
+void Resizing_Image(int argc, rt_uint8_t *argv[])	//缩放子图像命令
+{
+    const char *gray = "Gray_Scale";
+    const char *no = "No_output";
+    rt_uint8_t *string[2] = {(rt_uint8_t *)gray, (rt_uint8_t *)no};
+
+    rt_uint8_t (*subImages)[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH] =
+            (rt_uint8_t (*)[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH])
+            rt_malloc(SUBIMAGE_HEIGHT * SUBIMAGE_WIDTH * sizeof(rt_uint8_t)); //子图像动态内存
+    if (subImages == NULL){    //判断子图像内存是否成功申请
+        LOG_E("Failed to allocate memory for subImages");return;}
+
+    rt_uint8_t (*resized_subImage)[STANDARD_IMAGE_HEIGHT][STANDARD_IMAGE_WIDTH] =
+            (rt_uint8_t (*)[STANDARD_IMAGE_HEIGHT][STANDARD_IMAGE_WIDTH])
+            rt_malloc(STANDARD_IMAGE_HEIGHT * STANDARD_IMAGE_WIDTH * sizeof(rt_uint8_t)); //缩放后的图像动态内存
+    if (resized_subImage == NULL){    //判断缩放图内存是否成功申请
+        LOG_E("Failed to allocate memory for resized_subImage");return;}
+
+    if(argc != 3)
+    {
+        Gray_Scale(2, string);                              //灰度调整命令
+//        Split_An_Image_Into_Subimages(subImages, 2, 18);    //分割子图像
+        Split_An_Image_Into_Subimages(subImages, 0, 0);     //分割子图像
+        resize_image(subImages, resized_subImage, SUBIMAGE_WIDTH, SUBIMAGE_HEIGHT, STANDARD_IMAGE_WIDTH, STANDARD_IMAGE_HEIGHT);    //缩放图片
+        rt_device_write(camera_device_t.uart, 0, *resized_subImage, sizeof(*resized_subImage));                                     //输出缩放图
+    }
+    else if(argc == 3)
+    {
+        rt_uint8_t inputImage_row    = (rt_uint8_t)atoi((const char *)argv[1]);         //x轴位置
+        rt_uint8_t inputImage_column = (rt_uint8_t)atoi((const char *)argv[2]);         //y轴位置
+
+        Gray_Scale(2, string);                                                          //灰度调整命令
+        Split_An_Image_Into_Subimages(subImages, inputImage_row, inputImage_column);    //分割子图像
+        resize_image(subImages, resized_subImage, SUBIMAGE_WIDTH, SUBIMAGE_HEIGHT, STANDARD_IMAGE_WIDTH, STANDARD_IMAGE_HEIGHT);    //缩放图片
+        rt_device_write(camera_device_t.uart, 0, *resized_subImage, sizeof(*resized_subImage));                                     //输出缩放图
+    }
+
+    rt_free(resized_subImage);  //释放缩放图像内存
+    rt_free(subImages);         //释放子图像内存
 }
 
 void Sub_Images(int argc, rt_uint8_t *argv[])
@@ -389,11 +432,10 @@ void Sub_Images(int argc, rt_uint8_t *argv[])
     }
 }
 
-
-
 /* 导出到 msh 命令列表中 */
 MSH_CMD_EXPORT(Color_Channel, Set the image color channel:<Color_Channel <str>>);
 MSH_CMD_EXPORT(Gray_Scale, Gray scale the image);
 MSH_CMD_EXPORT(Binary_Image, Binary image :<Binary_Image < >|<average>>);
 MSH_CMD_EXPORT(SubImages_An, Output one subimage :<SubImages_An <x> <y>>);
+MSH_CMD_EXPORT(Resizing_Image, Resizing the image :<Resizing_Image <x> <y>>);
 MSH_CMD_EXPORT(Sub_Images, Output subimage);
