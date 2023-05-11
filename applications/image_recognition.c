@@ -132,7 +132,7 @@ static void Split_An_Image_Into_Subimages(  rt_uint8_t (*subImages)[SUBIMAGE_HEI
 
 static void resize_image(   rt_uint8_t (*subImages)[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH],
                             rt_uint8_t (*resized_subImage)[STANDARD_IMAGE_HEIGHT][STANDARD_IMAGE_WIDTH],
-                            int column, int row, int new_column, int new_row)       //缩放图片
+                            int column, int row, int new_column, int new_row)       //缩放图片(使用双线性插值算法)
 {
     float scale_x = (float)(column) / new_column;       //缩放宽比例
     float scale_y = (float)(row) / new_row;             //缩放长比例
@@ -266,7 +266,7 @@ void Split_Image_Into_Subimages(rt_uint8_t row, rt_uint8_t column)
             resize_image(subImages, resized_subImage, SUBIMAGE_WIDTH, SUBIMAGE_HEIGHT, STANDARD_IMAGE_WIDTH, STANDARD_IMAGE_HEIGHT);  //缩放图片
 
 //            rt_device_write(camera_device_t.uart, 0, *subImages, sizeof(*subImages));        //输出子图像
-//            rt_device_write(camera_device_t.uart, 0, *resized_subImage, sizeof(*resized_subImage));        //输出缩放图
+            rt_device_write(camera_device_t.uart, 0, *resized_subImage, sizeof(*resized_subImage));        //输出缩放图
 
 //            recognition_result = Digital_Recognition(subImages);            //方差判断数字 子图像
 //            recognition_result = Digital_Recognition(resized_subImage);     //方差判断数字 缩放后的图像
@@ -349,8 +349,8 @@ void SubImages_An(int argc, rt_uint8_t *argv[])     //分割子图像
     if(argc != 3)
     {
         Gray_Scale(2, string);
-//        Split_An_Image_Into_Subimages(subImages, 0, 0);
-        Split_An_Image_Into_Subimages(subImages, 2, 18);
+//        Split_An_Image_Into_Subimages(subImages, 2, 18);
+        Split_An_Image_Into_Subimages(subImages, 0, 0);
         LOG_I("子图像分割成功");
 //        LOG_I("Subimage segmentation succeeded");
     }
@@ -376,8 +376,8 @@ void Sub_Images(int argc, rt_uint8_t *argv[])
     if(argc != 3)
     {
         Gray_Scale(2, string);
-        Split_Image_Into_Subimages(2, 18);
-//        Split_Image_Into_Subimages(0, 0);
+//        Split_Image_Into_Subimages(2, 18);
+        Split_Image_Into_Subimages(0, 0);
     }
     else if(argc == 3)
     {
@@ -388,6 +388,8 @@ void Sub_Images(int argc, rt_uint8_t *argv[])
         Split_Image_Into_Subimages(inputImage_row, inputImage_column);
     }
 }
+
+
 
 /* 导出到 msh 命令列表中 */
 MSH_CMD_EXPORT(Color_Channel, Set the image color channel:<Color_Channel <str>>);

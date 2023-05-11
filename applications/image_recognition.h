@@ -3,25 +3,20 @@
 
 #include "stm32u5xx_hal.h"
 
-#define SUBIMAGE_WIDTH          48  //历遍子图像列数(子图像宽)
-#define SUBIMAGE_HEIGHT         48  //历遍子图像行数(子图像高)
-#define STANDARD_IMAGE_WIDTH    96  //标准图像宽
-#define STANDARD_IMAGE_HEIGHT   96  //标准图像高
-//
-//#define SUBIMAGE_WIDTH          5   //历遍子图像列数(子图像宽)
-//#define SUBIMAGE_HEIGHT         5   //历遍子图像行数(子图像高)
-//#define STANDARD_IMAGE_WIDTH    3   //标准图像宽
-//#define STANDARD_IMAGE_HEIGHT   3   //标准图像高
-//
-//#define SUBIMAGE_WIDTH          3   //历遍子图像列数(子图像宽)
-//#define SUBIMAGE_HEIGHT         3   //历遍子图像行数(子图像高)
-//#define STANDARD_IMAGE_WIDTH    5   //标准图像宽
-//#define STANDARD_IMAGE_HEIGHT   5   //标准图像高
+//#define SUBIMAGE_WIDTH          48  //历遍子图像列数(子图像宽)
+//#define SUBIMAGE_HEIGHT         48  //历遍子图像行数(子图像高)
+//#define STANDARD_IMAGE_WIDTH    96  //标准图像宽
+//#define STANDARD_IMAGE_HEIGHT   96  //标准图像高
 
-//#define SUBIMAGE_WIDTH          9   //历遍子图像列数(子图像宽)
-//#define SUBIMAGE_HEIGHT         18  //历遍子图像行数(子图像高)
-//#define STANDARD_IMAGE_WIDTH    12  //标准图像宽
-//#define STANDARD_IMAGE_HEIGHT   20  //标准图像高
+//#define SUBIMAGE_WIDTH          96  //历遍子图像列数(子图像宽)
+//#define SUBIMAGE_HEIGHT         96  //历遍子图像行数(子图像高)
+//#define STANDARD_IMAGE_WIDTH    48  //标准图像宽
+//#define STANDARD_IMAGE_HEIGHT   48  //标准图像高
+
+#define SUBIMAGE_WIDTH          9   //历遍子图像列数(子图像宽)
+#define SUBIMAGE_HEIGHT         18  //历遍子图像行数(子图像高)
+#define STANDARD_IMAGE_WIDTH    12  //标准图像宽
+#define STANDARD_IMAGE_HEIGHT   20  //标准图像高
 
 #define max(a,b) (((a) > (b)) ? (a) : (b))
 #define min(a,b) (((a) < (b)) ? (a) : (b))
