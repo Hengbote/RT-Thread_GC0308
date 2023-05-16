@@ -137,8 +137,8 @@ static void Set_Frame_Size(framesize_t framesize) // 设置帧尺寸函数
             col_s = (resolution[FRAMESIZE_640x480_VGA].width - win_w) / 2;      //起始行=(最大图像宽度-窗口宽度)/2
 
             ratio = (float)cfg->ratio_numerator / (float)cfg->ratio_denominator;
-            LOG_I("子窗口大小:%d*%d, 窗口比例:%.2f", win_w, win_h, ratio);
-//            LOG_I("subsample window:%d*%d, ratio:%f", win_w, win_h, ratio);
+            LOG_I("子窗口大小:%d*%d, 窗口比例:%d.%d", win_w, win_h, (int)ratio, (int)((ratio-(int)ratio)*1000));
+//            LOG_I("subsample window:%d*%d, ratio:%d.%d", win_w, win_h, (int)ratio, (int)((ratio-(int)ratio)*1000));
             break;
         }
     }
@@ -252,6 +252,18 @@ void GC0308_Reponse_Callback(void *parameter)
         LOG_E("Failed to initialize the semaphore");
 
     ret = GC0308_Register_Init();    //GC0308寄存器初始化
+
+//        char *buffer = "a";
+//        rt_device_t uart3_mqtt;                   //4g模块串口
+//        struct rt_semaphore mqtt_sem;
+//        uart3_mqtt = rt_device_find("uart3");                       //寻找4g模块串口输出设备
+//        if(uart3_mqtt == RT_NULL)
+//            LOG_E("Cannot find camera device on uart3");
+//        rt_device_open(uart3_mqtt, RT_DEVICE_OFLAG_RDWR);           //打开4g模块串口输出设备 读写
+//        rt_err_t result1 = rt_sem_init(&mqtt_sem, "mqtt_sem", 0, RT_IPC_FLAG_FIFO);  //初始化MQTT件信号量 先进先出模式
+//        if (result1 != RT_EOK)
+//            LOG_E("Failed to initialize the MQTT semaphore");
+//        rt_device_write(uart3_mqtt, 0, buffer, sizeof(buffer));
 
     while(ret == RT_EOK)
     {

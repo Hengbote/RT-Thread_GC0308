@@ -10,8 +10,5 @@
 #define RT_USING_NEWLIB
 #define _POSIX_C_SOURCE 1
 #define __RTTHREAD__
-#define printf rt_kprintf
-#define snprintf rt_snprintf
-#define sprintf rt_sprintf
 
 #endif /*RTCONFIG_PREINC_H__*/

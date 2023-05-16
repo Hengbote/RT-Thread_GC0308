@@ -130,8 +130,8 @@ static void resize_image(   rt_uint8_t (*subImages)[SUBIMAGE_HEIGHT][SUBIMAGE_WI
     float scale_x = (float)(column) / new_column;       //缩放宽比例
     float scale_y = (float)(row) / new_row;             //缩放长比例
 
-    LOG_I("(scale_x = %f) = (column=%d)/(new_column=%d)", scale_x, column, new_column);
-    LOG_I("(scale_y = %f) = (row=%d)/(new_row=%d)\n", scale_y, row, new_row);
+    LOG_I("(scale_x = %d.%d) = (column=%d)/(new_column=%d)", (int)scale_x, (int)((scale_x-(int)scale_x)*1000), column, new_column);
+    LOG_I("(scale_y = %d.%d) = (row=%d)/(new_row=%d)\n", (int)scale_y, (int)((scale_y-(int)scale_y)*1000), row, new_row);
 
     for (int y = 0; y < new_row; ++y){                          //遍历目标图像(输出)的所有行
 
@@ -139,7 +139,7 @@ static void resize_image(   rt_uint8_t (*subImages)[SUBIMAGE_HEIGHT][SUBIMAGE_WI
         int NewY = (int)PosY;                   //向下取整
         int PartY;                              //对应表达式中的Y
         int InvY;                               //对应表达式中的1-Y
-//        LOG_I("(PosY=%f)=(j+0.5=%.2f)*(scale_y=%.3f)-0.5", PosY, (float)j+0.5, scale_y);
+//        LOG_I("(PosY=%d.%d)=(y+0.5=%d.5)*(scale_y=%d.%d)-0.5", (int)PosY, (int)((PosY-(int)PosY)*1000), y, (int)scale_y, (int)((scale_y-(int)scale_y)*1000));
 
         if (NewY < 0)                           //NewY不要超出行索引
             PartY = 0, NewY = 0;
@@ -148,7 +148,7 @@ static void resize_image(   rt_uint8_t (*subImages)[SUBIMAGE_HEIGHT][SUBIMAGE_WI
 
         PartY = max(((PosY - NewY) * 2048), 0); //对应表达式中的Y
         InvY = 2048 - PartY;                    //对应表达式中的1-Y
-//        LOG_I("(PartY=%d)=((PosY=%f)-(NewY=%d))*2048    (InvY=%d)=2048-PartY\n", PartY, PosY, NewY, InvY);
+//        LOG_I("(PartY=%d)=((PosY=%d.%d)-(NewY=%d))*2048    (InvY=%d)=2048-PartY\n", PartY, (int)PosY, (int)((PosY-(int)PosY)*1000), NewY, InvY);
 
         for (int x = 0; x < new_column; ++x){                   //遍历目标图像(输出)的所有列
 
@@ -157,7 +157,7 @@ static void resize_image(   rt_uint8_t (*subImages)[SUBIMAGE_HEIGHT][SUBIMAGE_WI
                int PartX;                       //对应表达式中的X
                int InvX;                        //对应表达式中的1-X
 
-//               LOG_I("(PosX=%f)=(i+0.5=%.2f)*(scale_x=%.3f)-0.5", PosX, (float)i+0.5, scale_x);
+//               LOG_I("(PosX=%d.%d)=(x+0.5=%d.5)*(scale_x=%d.%d)-0.5", (int)PosX, (int)((PosX-(int)PosX)*1000), x, (int)scale_x, (int)((scale_x-(int)scale_x)*1000));
 
                if (NewX < 0)                    //NewX不要超出行索引
                    PartX = 0, NewX = 0;
@@ -167,7 +167,7 @@ static void resize_image(   rt_uint8_t (*subImages)[SUBIMAGE_HEIGHT][SUBIMAGE_WI
                PartX = max(((PosX - NewX) * 2048), 0);          //对应表达式中的X
                InvX = 2048 - PartX;                             //对应表达式中的1-X
 
-//               LOG_I("(PartX=%d)=((PosX=%f)-(NewX=%d))*2048    (InvX=%d)=2048-PartX", PartX, PosX, NewX, InvX);
+//               LOG_I("(PartX=%d)=((PosX=%d.%d)-(NewX=%d))*2048    (InvX=%d)=2048-PartX", PartX, (int)PosX, (int)((PosX-(int)PosX)*1000), NewX, InvX);
 
                /*((f(NewX,NewY)*(1-x)+f(NewX+1,NewY)*x)*(1-y)+(f(NewX,NewY+1)*(1-x)+f(NewX+1,NewY+1)*x)*y)>>22*/
                (*resized_subImage)[y][x] = (
