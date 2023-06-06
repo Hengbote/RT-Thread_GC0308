@@ -8,6 +8,7 @@
     #include "i2c.h"
 #endif
 #include "GC0308.h"
+#include "bc28.h"
 #include "image_recognition.h"
 
 
@@ -21,6 +22,7 @@ int main(void)
 
 //    I2C_Reponse();
     GC0308_Reponse();
+    BC28_Reponse();
     while (count++)
     {
         rt_thread_mdelay(1000);

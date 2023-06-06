@@ -298,9 +298,11 @@ void GC0308_Reponse_Callback(void *parameter)
 void GC0308_Reponse(void)
 {
     camera_response_t = rt_thread_create("camera_response_t", GC0308_Reponse_Callback, RT_NULL, 2048, 10, 10);
-    if(camera_response_t!=RT_NULL)rt_thread_startup(camera_response_t);
-    LOG_I("I2C响应函数初始化成功");
-//    LOG_I("I2C_Reponse Init Success");
+    if(camera_response_t!=RT_NULL){
+        rt_thread_startup(camera_response_t);
+        LOG_I("摄像头响应函数初始化成功");
+//        LOG_I("GC0308_Reponse Init Success");
+    }
 }
 
 void Take_Picture(int argc, rt_uint8_t *argv[])

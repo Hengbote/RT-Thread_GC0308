@@ -1,1 +1,22 @@
-[]
+[
+ {
+  "path": "/packages/iot/pahomqtt", 
+  "ver": "latest", 
+  "name": "PAHOMQTT"
+ }, 
+ {
+  "path": "/packages/iot/at_device", 
+  "ver": "latest", 
+  "name": "AT_DEVICE"
+ }, 
+ {
+  "path": "/packages/iot/iot_cloud/onenet", 
+  "ver": "latest", 
+  "name": "ONENET"
+ }, 
+ {
+  "path": "/packages/language/JSON/cJSON", 
+  "ver": "latest", 
+  "name": "CJSON"
+ }
+]
