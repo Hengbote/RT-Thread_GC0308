@@ -2,6 +2,9 @@
 #define APPLICATIONS_IMAGE_RECOGNITION_H_
 
 #include "stm32u5xx_hal.h"
+#include "main.h"
+
+#ifndef USE_STM32IPL
 
 //#define SUBIMAGE_WIDTH          48  //历遍子图像列数(子图像宽)
 //#define SUBIMAGE_HEIGHT         48  //历遍子图像行数(子图像高)
@@ -22,8 +25,6 @@
 #define min(a,b) (((a) < (b)) ? (a) : (b))
 
 #define SATURATE_CAST(value, data) ((data) < 0 ? 0 : ((data) > (value) ? (value) : (data)))
-
-
 
 
 static const rt_uint8_t standard_one[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH] = {};
@@ -58,4 +59,5 @@ static const rt_uint8_t standard_ten[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH] = {};
 
 void Image_Recognition_Reponse(void);  //图像识别任务调用函数
 
+#endif /*USE_STM32IPL 是否使用IPL库*/
 #endif /* APPLICATIONS_IMAGE_RECOGNITION_H_ */

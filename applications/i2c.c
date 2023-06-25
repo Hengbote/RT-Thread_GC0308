@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include "pin_config.h"
 
-#ifdef bare
+#ifndef USE_BARE
 #include "i2c.h"
 #include "GC0308.h"
 

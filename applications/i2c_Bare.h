@@ -1,9 +1,11 @@
 #ifndef APPLICATIONS_I2C_BARE_H_
 #define APPLICATIONS_I2C_BARE_H_
 
-#include "pin_config.h"
+#include "main.h"
 
-#if bare
+#ifdef USE_BARE
+
+#include "pin_config.h"
 
 /*摄像头寄存器地址*/
 #define OV2640_DSP_RA_DLMT 0xFF         // DSP 地址
@@ -34,6 +36,6 @@ typedef struct
 
 void I2C_Reponse(void);
 
-#endif
+#endif  /*USE_BARE*/
 
 #endif /* APPLICATIONS_I2C_BARE_H_ */

@@ -3,9 +3,12 @@
 #include <board.h>
 #include <stdio.h>
 #include <string.h>
-#include <rtdbg.h>
 #include "onenet.h"
 #include "bc28.h"
+
+#define DBG_TAG "BC28"
+#define DBG_LVL DBG_INFO
+#include <rtdbg.h>
 
 //static rt_event_t recvdata_event;                   /* 事件集 */
 static rt_sem_t mqttinit_sem;                       /* 信号量 */

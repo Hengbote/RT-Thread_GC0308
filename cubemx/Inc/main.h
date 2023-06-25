@@ -66,6 +66,12 @@ void Error_Handler(void);
 #define IIC_SCL_Pin GPIO_PIN_11
 #define IIC_SCL_GPIO_Port GPIOC
 
+/*USE_STM32IPL 是否使用IPL库*/
+#define USE_STM32IPL
+
+/**/
+//#define USE_BARE
+
 /* USER CODE BEGIN Private defines */
 void MX_DCMI_Init(void);
 void MX_GPDMA1_Init(void);

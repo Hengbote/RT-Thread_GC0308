@@ -9,7 +9,4 @@
 #define SCL_PIN 43
 #define SDA_PIN 42
 
-#define bare 0
-
-
 #endif /* APPLICATIONS_PIN_CONFIG_H_ */

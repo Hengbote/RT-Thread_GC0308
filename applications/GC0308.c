@@ -8,8 +8,12 @@
 #define DBG_LVL DBG_INFO
 #include <rtdbg.h>
 
-rt_uint16_t JpegBuffer[INPUT_HEIGHT][INPUT_WIDTH];  //图片缓冲
-//rt_uint16_t JpegBuffer[INPUT_WIDTH][INPUT_HEIGHT];  //图片缓冲
+#ifdef USE_STM32IPL
+     #include "fp_vision_app.h"
+#else
+    rt_uint16_t JpegBuffer[INPUT_HEIGHT][INPUT_WIDTH];      //原始图片缓冲
+#endif
+
 extern DCMI_HandleTypeDef hdcmi;
 extern DMA_HandleTypeDef handle_GPDMA1_Channel0;
 extern Camera_Structure camera_device_t;        //摄像头设备
@@ -305,9 +309,11 @@ void GC0308_Reponse(void)
     }
 }
 
+#ifndef USE_STM32IPL
 void Take_Picture(int argc, rt_uint8_t *argv[])
 {
     __HAL_DCMI_ENABLE_IT(camera_device_t.dcmi, DCMI_IT_FRAME);  //使用帧中断
+
     rt_memset((void *)JpegBuffer,0,PICTURE_BUFFER_LENGTH * sizeof(rt_uint32_t));  //把接收BUF清空
     //启动拍照    DCMI结构体指针 DCMI捕获模式 目标内存缓冲区地址 要传输的捕获长度
     HAL_DCMI_Start_DMA(camera_device_t.dcmi, DCMI_MODE_SNAPSHOT,(rt_uint32_t)JpegBuffer, PICTURE_BUFFER_LENGTH);    //启动拍照
@@ -319,7 +325,7 @@ void Take_Picture(int argc, rt_uint8_t *argv[])
     }
 
     if(argc == 1)
-        rt_device_write(camera_device_t.uart, 0, JpegBuffer, PICTURE_BUFFER_LENGTH * sizeof(rt_uint32_t));
+        rt_device_write(camera_device_t.uart, 0, JpegBuffer, PICTURE_BUFFER_LENGTH * sizeof(rt_uint32_t));          //通过串口输出图片数据
     else if(argc == 2)
         LOG_I("拍照成功");
 //        LOG_I("Photo taken successfully");
@@ -327,3 +333,30 @@ void Take_Picture(int argc, rt_uint8_t *argv[])
 
 /* 导出到 msh 命令列表中 */
 MSH_CMD_EXPORT(Take_Picture, Take a picture);
+
+#else
+void Take_Picture(int argc, rt_uint8_t *argv[])
+{
+    __HAL_DCMI_ENABLE_IT(camera_device_t.dcmi, DCMI_IT_FRAME);  //使用帧中断
+
+    rt_memset((void *)ai_fp_global_memory,0,CAM_FRAME_BUFFER_SIZE * sizeof(rt_uint32_t));  //把接收BUF清空
+    //启动拍照    DCMI结构体指针 DCMI捕获模式 目标内存缓冲区地址 要传输的捕获长度
+    HAL_DCMI_Start_DMA(camera_device_t.dcmi, DCMI_MODE_SNAPSHOT,(rt_uint32_t)ai_fp_global_memory, CAM_FRAME_BUFFER_SIZE);    //启动拍照
+
+    if(rt_sem_take(&dcmi_sem, RT_WAITING_FOREVER) == RT_EOK)
+    {
+        HAL_DCMI_Suspend(camera_device_t.dcmi);   //拍照完成，挂起DCMI
+        HAL_DCMI_Stop(camera_device_t.dcmi);      //拍照完成，停止DMA传输
+    }
+
+    if(argc == 1)
+        rt_device_write(camera_device_t.uart, 0, ai_fp_global_memory, CAM_FRAME_BUFFER_SIZE * sizeof(rt_uint32_t));          //通过串口输出图片数据
+    else if(argc == 2)
+        LOG_I("拍照成功");
+//        LOG_I("Photo taken successfully");
+}
+
+/* 导出到 msh 命令列表中 */
+MSH_CMD_EXPORT(Take_Picture, Take a picture);
+
+#endif

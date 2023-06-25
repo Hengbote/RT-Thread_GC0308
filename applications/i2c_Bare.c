@@ -1,10 +1,10 @@
 #include <rtthread.h>
 #include <rtdevice.h>
-#include "pin_config.h"
-
-#if bare
-
 #include "i2c_Bare.h"
+
+#ifdef USE_BARE
+
+#include "pin_config.h"
 #include "drv_common.h"
 
 #define DBG_TAG "i2c"
@@ -163,4 +163,4 @@ void I2C_Reponse(void)
     LOG_I("I2C_Reponse Init Success\r\n");
 }
 
-#endif
+#endif  /*USE_BARE*/

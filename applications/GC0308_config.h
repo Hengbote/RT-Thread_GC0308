@@ -1,6 +1,8 @@
 #ifndef APPLICATIONS_GC0308_CONFIG_H_
 #define APPLICATIONS_GC0308_CONFIG_H_
 
+#include <rtdef.h>
+
 typedef enum {
     FRAMESIZE_96X96,            // 96x96
     FRAMESIZE_160x120_QQVGA,    // 160x120

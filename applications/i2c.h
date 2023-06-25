@@ -3,7 +3,7 @@
 
 #include "pin_config.h"
 #include "main.h"
-#ifdef bare
+#ifndef USE_BARE
 
 #define CAMERA_I2C_BUS_NAME     "i2c1" /* 传感器连接的I2C总线设备名称 */
 #define CAMERA_UART_NAME        "uart2" /* 传感器连接的串口设备名称 */

@@ -5,6 +5,7 @@
 #include "GC0308.h"
 #include "i2c.h"
 
+#ifndef USE_STM32IPL
 
 #define DBG_TAG "image_recognition"
 #define DBG_LVL DBG_INFO
@@ -12,7 +13,7 @@
 
 static rt_uint8_t  Binary_JpegBuffer[INPUT_HEIGHT][INPUT_WIDTH];        //图片二值化缓冲
 static rt_uint8_t  Gray_Scale_JpegBuffer[INPUT_HEIGHT][INPUT_WIDTH];    //图片灰度化缓冲
-extern rt_uint16_t JpegBuffer[INPUT_HEIGHT][INPUT_WIDTH];               //图片缓冲
+extern rt_uint16_t JpegBuffer[INPUT_HEIGHT][INPUT_WIDTH];               //原始图片缓冲
 extern struct rt_semaphore dcmi_sem;            //DCMI帧事件中断 回调函数信号量
 
 extern Camera_Structure camera_device_t;    //摄像头设备结构体
@@ -439,3 +440,5 @@ MSH_CMD_EXPORT(Binary_Image, Binary image :<Binary_Image < >|<average>>);
 MSH_CMD_EXPORT(SubImages_An, Output one subimage :<SubImages_An <x> <y>>);
 MSH_CMD_EXPORT(Resizing_Image, Resizing the image :<Resizing_Image <x> <y>>);
 MSH_CMD_EXPORT(Sub_Images, Output subimage);
+
+#endif /*USE_STM32IPL 是否使用IPL库*/
