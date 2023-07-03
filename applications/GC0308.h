@@ -2,6 +2,7 @@
 #define APPLICATIONS_GC0308_H_
 
 #include "stm32u5xx_hal.h"
+#include "pin_config.h"
 #include "GC0308_config.h"
 
 #define CONFIG_GC_SENSOR_SUBSAMPLE_MODE 1   //子采样模式启用   否则就是窗口模式
@@ -9,7 +10,8 @@
 extern const resolution_info_t resolution[FRAMESIZE_INVALID];
 
 /*要改图片大小改这里*/
-#define FRAME_SIZE FRAMESIZE_320x240_QVGA  //图片大小
+//#define FRAME_SIZE FRAMESIZE_320x240_QVGA  //图片大小
+#define FRAME_SIZE FRAMESIZE_160x120_QQVGA  //图片大小
 
 /*图像宽*/
 #define INPUTWIDTH(framesize) (\

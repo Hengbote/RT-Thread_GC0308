@@ -2,6 +2,7 @@
 #define APPLICATIONS_IMAGE_RECOGNITION_H_
 
 #include "stm32u5xx_hal.h"
+#include "pin_config.h"
 #include "main.h"
 
 #ifndef USE_STM32IPL

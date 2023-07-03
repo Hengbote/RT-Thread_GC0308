@@ -57,20 +57,14 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define IIC_GC0308_SDA_Pin GPIO_PIN_2
+#define IIC_GC0308_SDA_GPIO_Port GPIOC
+#define IIC_GC0308_SCL_Pin GPIO_PIN_3
+#define IIC_GC0308_SCL_GPIO_Port GPIOC
 #define PWDN_Pin GPIO_PIN_7
 #define PWDN_GPIO_Port GPIOA
 #define RST_Pin GPIO_PIN_15
 #define RST_GPIO_Port GPIOA
-#define IIC_SDA_Pin GPIO_PIN_10
-#define IIC_SDA_GPIO_Port GPIOC
-#define IIC_SCL_Pin GPIO_PIN_11
-#define IIC_SCL_GPIO_Port GPIOC
-
-/*USE_STM32IPL 是否使用IPL库*/
-#define USE_STM32IPL
-
-/**/
-//#define USE_BARE
 
 /* USER CODE BEGIN Private defines */
 void MX_DCMI_Init(void);

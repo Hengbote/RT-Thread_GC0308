@@ -9,4 +9,10 @@
 #define SCL_PIN 43
 #define SDA_PIN 42
 
+/*USE_STM32IPL 是否使用IPL库*/
+//#define USE_STM32IPL
+
+/**/
+//#define USE_BARE
+
 #endif /* APPLICATIONS_PIN_CONFIG_H_ */

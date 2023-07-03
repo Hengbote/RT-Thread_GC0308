@@ -1,7 +1,6 @@
 #include <rtthread.h>
 #include <rtdevice.h>
 #include "GC0308.h"
-#include "GC0308_config.h"
 #include "i2c.h"
 
 #define DBG_TAG "GC0308"

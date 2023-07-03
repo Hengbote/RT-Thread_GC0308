@@ -96,8 +96,8 @@ extern "C"
 
 #define BSP_USING_I2C1
 #ifdef BSP_USING_I2C1
-#define BSP_I2C1_SCL_PIN    GET_PIN(C, 11)
-#define BSP_I2C1_SDA_PIN    GET_PIN(C, 10)
+#define BSP_I2C1_SCL_PIN    GET_PIN(C, 3)
+#define BSP_I2C1_SDA_PIN    GET_PIN(C, 2)
 #endif
 
 /*#define BSP_USING_I2C2*/
