@@ -1352,7 +1352,8 @@ static uint32_t ipstr_atol(const char* nptr)
     uint32_t total = 0;
     char sign = '+';
     /* jump space */
-    while (isspace(*nptr))
+//    while (isspace(*nptr))
+    while (isspace((unsigned char)*nptr))
     {
         ++nptr;
     }
@@ -1360,7 +1361,8 @@ static uint32_t ipstr_atol(const char* nptr)
     {
         sign = *nptr++;
     }
-    while (isdigit(*nptr))
+//    while (isdigit(*nptr))
+    while (isdigit((unsigned char)*nptr))
     {
         total = 10 * total + ((*nptr++) - '0');
     }
@@ -1409,7 +1411,8 @@ struct hostent *at_gethostbyname(const char *name)
         return RT_NULL;
     }
 
-    for (idx = 0; idx < strlen(name) && !isalpha(name[idx]); idx++);
+//    for (idx = 0; idx < strlen(name) && !isalpha(name[idx]); idx++);
+    for (idx = 0; idx < strlen(name) && !isalpha((unsigned char)name[idx]); idx++);
 
     if (idx < strlen(name))
     {
@@ -1517,7 +1520,8 @@ int at_getaddrinfo(const char *nodename, const char *servname,
             char ip_str[16] = { 0 };
             size_t idx = 0;
 
-            for (idx = 0; idx < strlen(nodename) && !isalpha(nodename[idx]); idx++);
+//            for (idx = 0; idx < strlen(nodename) && !isalpha(nodename[idx]); idx++);
+            for (idx = 0; idx < strlen(nodename) && !isalpha((unsigned char)nodename[idx]); idx++);
 
             if(idx < strlen(nodename))
             {
