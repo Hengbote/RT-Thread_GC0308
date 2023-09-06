@@ -11,7 +11,7 @@ extern const resolution_info_t resolution[FRAMESIZE_INVALID];
 
 /*要改图片大小改这里*/
 //#define FRAME_SIZE FRAMESIZE_320x240_QVGA  //图片大小
-#define FRAME_SIZE FRAMESIZE_160x120_QQVGA  //图片大小
+#define FRAME_SIZE FRAMESIZE_176x144_QCIF  //图片大小
 
 /*图像宽*/
 #define INPUTWIDTH(framesize) (\
@@ -64,8 +64,9 @@ extern const resolution_info_t resolution[FRAMESIZE_INVALID];
 #define H8(v) ((v)>>8)
 #define L8(v) ((v)&0xff)
 
-void Take_Picture(int argc, rt_uint8_t *argv[]);    //拍照命令 调用自定义MSH命令
-void HAL_DCMI_FrameEventCallback(DCMI_HandleTypeDef *hdcmi);     //帧事件中断 回调函数
+void Interior_Take_Picture(void);                               //内部拍照
+void Take_Picture(int argc, rt_uint8_t *argv[]);                //拍照命令 调用自定义MSH命令
+void HAL_DCMI_FrameEventCallback(DCMI_HandleTypeDef *hdcmi);    //帧事件中断 回调函数
 void GC0308_Reponse(void);  //任务调用
 
 #endif /* APPLICATIONS_GC0308_H_ */

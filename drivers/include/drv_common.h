@@ -21,11 +21,11 @@
 extern "C" {
 #endif
 
-void _Error_Handler(char *s, int num);
-
-#ifndef Error_Handler
-#define Error_Handler() _Error_Handler(__FILE__, __LINE__)
-#endif
+//void _Error_Handler(char *s, int num);
+//
+//#ifndef Error_Handler
+//#define Error_Handler() _Error_Handler(__FILE__, __LINE__)
+//#endif
 
 #define DMA_NOT_AVAILABLE ((DMA_INSTANCE_TYPE *)0xFFFFFFFFU)
 

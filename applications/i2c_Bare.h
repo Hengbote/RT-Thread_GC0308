@@ -33,7 +33,7 @@ typedef struct
 }Camera_Structure;
 
 
-void I2C_Reponse(void);
+void GC0308_I2C_Reponse(void);
 
 #endif  /*USE_BARE*/
 

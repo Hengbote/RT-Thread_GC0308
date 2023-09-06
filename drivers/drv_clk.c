@@ -13,6 +13,7 @@
 #include <rtthread.h>
 #include <drv_common.h>
 #include <stm32u5xx.h>
+#include "main.h"
 
 #define DBG_TAG "board"
 #define DBG_LVL DBG_INFO

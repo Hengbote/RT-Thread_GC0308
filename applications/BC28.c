@@ -22,7 +22,7 @@ static void onenet_mqtt_init_entry(void *parameter)
 {
     uint8_t onenet_mqtt_init_failed_times;
 
-    rt_thread_mdelay(30000);
+//    rt_thread_mdelay(30000);
 
     /* mqtt初始化 */
     while (1)
@@ -54,6 +54,7 @@ static void onenet_upload_data_entry(void *parameter)
             data = 0;
 
         /* 60s上传一次数据 */
+//        rt_thread_mdelay(600);
         rt_thread_mdelay(60000);
 
         /* 上传发送节点1的数据到OneNet服务器，数据流名字是temperature_p0 */
@@ -65,7 +66,7 @@ static void onenet_upload_data_entry(void *parameter)
     }
 }
 
-int BC28_Reponse(void)
+void BC28_Reponse(void)
 {
 
     mqttinit_sem = rt_sem_create("mqtt_sem", RT_NULL, RT_IPC_FLAG_FIFO);
@@ -83,7 +84,4 @@ int BC28_Reponse(void)
         rt_thread_startup(onenet_upload_data_thread);
         LOG_I("BC28初始化成功");
     }
-
-
-    return RT_EOK;
 }

@@ -63,20 +63,20 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
     return HAL_OK;
 }
 
-/**
-  * @brief  This function is executed in case of error occurrence.
-  * @param  None
-  * @retval None
-  */
-void _Error_Handler(char *s, int num)
-{
-    /* USER CODE BEGIN Error_Handler */
-    /* User can add his own implementation to report the HAL error return state */
-    while(1)
-    {
-    }
-    /* USER CODE END Error_Handler */
-}
+///**
+//  * @brief  This function is executed in case of error occurrence.
+//  * @param  None
+//  * @retval None
+//  */
+//void _Error_Handler(char *s, int num)
+//{
+//    /* USER CODE BEGIN Error_Handler */
+//    /* User can add his own implementation to report the HAL error return state */
+//    while(1)
+//    {
+//    }
+//    /* USER CODE END Error_Handler */
+//}
 
 /**
  * This function will delay for some us.

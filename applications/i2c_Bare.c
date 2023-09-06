@@ -133,7 +133,7 @@ rt_uint8_t SCCB_RD_Reg(rt_uint8_t reg)
     return val;
 }
 
-void I2C_Reponse_Callback(void *parameter)
+void GC0308_I2C_Reponse_Callback(void *parameter)
 {
     rt_uint8_t temp;
 
@@ -156,11 +156,11 @@ void I2C_Reponse_Callback(void *parameter)
     }
 }
 
-void I2C_Reponse(void)
+void GC0308_I2C_Reponse(void)
 {
-    camera_response_t = rt_thread_create("camera_response_t", I2C_Reponse_Callback, RT_NULL, 2048, 10, 10);
+    camera_response_t = rt_thread_create("camera_response_t", GC0308_I2C_Reponse_Callback, RT_NULL, 2048, 10, 10);
     if(camera_response_t!=RT_NULL)rt_thread_startup(camera_response_t);
-    LOG_I("I2C_Reponse Init Success\r\n");
+    LOG_I("GC0308_I2C_Reponse Init Success\r\n");
 }
 
 #endif  /*USE_BARE*/

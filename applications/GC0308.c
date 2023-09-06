@@ -10,14 +10,14 @@
 #ifdef USE_STM32IPL
      #include "fp_vision_app.h"
 #else
-    rt_uint16_t JpegBuffer[INPUT_HEIGHT][INPUT_WIDTH];      //原始图片缓冲
+rt_uint16_t JpegBuffer[INPUT_HEIGHT][INPUT_WIDTH];
 #endif
 
 extern DCMI_HandleTypeDef hdcmi;
 extern DMA_HandleTypeDef handle_GPDMA1_Channel0;
 extern Camera_Structure camera_device_t;        //摄像头设备
 rt_thread_t camera_response_t;                  //摄像头任务结构体
-struct rt_semaphore dcmi_sem;            //DCMI帧事件中断 回调函数信号量
+struct rt_semaphore dcmi_sem;                   //DCMI帧事件中断 回调函数信号量
 //static struct rt_semaphore dcmi_sem;            //DCMI帧事件中断 回调函数信号量
 
 const resolution_info_t resolution[FRAMESIZE_INVALID] = {
@@ -45,10 +45,10 @@ static rt_err_t GC0308_ReadPID(void)
          * *选择使用第0组的寄存器
          * *清除所有寄存器并将其重置为默认值
          * */
-        write_reg_1data(RESET_RELATED, 0xf0);
+        GC0308_I2C_Write_Reg_1data(RESET_RELATED, 0xf0);
 
         /*读取寄存芯片ID*/
-        read_reg_1data(0x00, &pid);
+        GC0308_I2C_Read_Reg_1data(0x00, &pid);
         LOG_I("PID = %02x", pid);
     }
     while(pid != GC0308_PID);
@@ -60,15 +60,15 @@ static void GC0308_Reset(void)// 传感器复位函数
 {
     if(rt_mutex_take(camera_device_t.lock, RT_WAITING_FOREVER) != RT_EOK)       //上锁
         LOG_E("Failed to obtain the mutex\r\n");
-    write_regs(gc0308_sensor_default_regs, sizeof(gc0308_sensor_default_regs)/(sizeof(rt_uint8_t) * 2));
+    GC0308_I2C_Write_Regs(gc0308_sensor_default_regs, sizeof(gc0308_sensor_default_regs)/(sizeof(rt_uint8_t) * 2));
     rt_mutex_release(camera_device_t.lock);                                     //解锁
     LOG_I("相机加载默认模式");
 //    LOG_I("Camera defaults loaded");
 
     rt_thread_mdelay(20);
-    write_reg_1data(RESET_RELATED, 0x00);   //寄存器选择第0页
+    GC0308_I2C_Write_Reg_1data(RESET_RELATED, 0x00);   //寄存器选择第0页
 #if 1
-    set_reg_bits(0x28, 4, 0x07, 1);  //frequency division for esp32, ensure pclk <= 15MHz
+    GC0308_I2C_Set_Reg_Bits(0x28, 4, 0x07, 1);  //frequency division for esp32, ensure pclk <= 15MHz
 #endif
 }
 
@@ -76,13 +76,13 @@ static void Set_Pixformat(pixformat_t pixformat)   // 设置像素格式函数
 {
     switch (pixformat) {
         case PIXFORMAT_RGB565:
-            write_reg_1data(0xfe, 0x00);        //选择第0页寄存器
-            set_reg_bits(0x24, 0, 0x0f, 6);     //RGB565
+            GC0308_I2C_Write_Reg_1data(0xfe, 0x00);        //选择第0页寄存器
+            GC0308_I2C_Set_Reg_Bits(0x24, 0, 0x0f, 6);     //RGB565
             break;
 
         case PIXFORMAT_YUV422:
-            write_reg_1data(0xfe, 0x00);        //选择第0页寄存器
-            set_reg_bits(0x24, 0, 0x0f, 2);     //yuv422 Y Cb Y Cr
+            GC0308_I2C_Write_Reg_1data(0xfe, 0x00);        //选择第0页寄存器
+            GC0308_I2C_Set_Reg_Bits(0x24, 0, 0x0f, 2);     //yuv422 Y Cb Y Cr
             break;
 
         default:
@@ -146,28 +146,28 @@ static void Set_Frame_Size(framesize_t framesize) // 设置帧尺寸函数
         }
     }
 
-    write_reg_1data(0xfe, 0x00);            //选择第0页
+    GC0308_I2C_Write_Reg_1data(0xfe, 0x00);            //选择第0页
 
-    write_reg_1data(0x05, H8(row_s));
-    write_reg_1data(0x06, L8(row_s));
-    write_reg_1data(0x07, H8(col_s));
-    write_reg_1data(0x08, L8(col_s));
-    write_reg_1data(0x09, H8(win_h + 8));
-    write_reg_1data(0x0a, L8(win_h + 8));
-    write_reg_1data(0x0b, H8(win_w + 8));
-    write_reg_1data(0x0c, L8(win_w + 8));
+    GC0308_I2C_Write_Reg_1data(0x05, H8(row_s));
+    GC0308_I2C_Write_Reg_1data(0x06, L8(row_s));
+    GC0308_I2C_Write_Reg_1data(0x07, H8(col_s));
+    GC0308_I2C_Write_Reg_1data(0x08, L8(col_s));
+    GC0308_I2C_Write_Reg_1data(0x09, H8(win_h + 8));
+    GC0308_I2C_Write_Reg_1data(0x0a, L8(win_h + 8));
+    GC0308_I2C_Write_Reg_1data(0x0b, H8(win_w + 8));
+    GC0308_I2C_Write_Reg_1data(0x0c, L8(win_w + 8));
 
-    write_reg_1data(0xfe, 0x01);            //选择第1页
+    GC0308_I2C_Write_Reg_1data(0xfe, 0x01);            //选择第1页
 
-    set_reg_bits(0x53, 7, 0x01, 1);
-    set_reg_bits(0x55, 0, 0x01, 1);
-    write_reg_1data(0x54, cfg->reg0x54);
-    write_reg_1data(0x56, cfg->reg0x56);
-    write_reg_1data(0x57, cfg->reg0x57);
-    write_reg_1data(0x58, cfg->reg0x58);
-    write_reg_1data(0x59, cfg->reg0x59);    //
+    GC0308_I2C_Set_Reg_Bits(0x53, 7, 0x01, 1);
+    GC0308_I2C_Set_Reg_Bits(0x55, 0, 0x01, 1);
+    GC0308_I2C_Write_Reg_1data(0x54, cfg->reg0x54);
+    GC0308_I2C_Write_Reg_1data(0x56, cfg->reg0x56);
+    GC0308_I2C_Write_Reg_1data(0x57, cfg->reg0x57);
+    GC0308_I2C_Write_Reg_1data(0x58, cfg->reg0x58);
+    GC0308_I2C_Write_Reg_1data(0x59, cfg->reg0x59);    //
 
-    write_reg_1data(0xfe, 0x00);
+    GC0308_I2C_Write_Reg_1data(0xfe, 0x00);
 
 #elif CONFIG_GC_SENSOR_WINDOWING_MODE
     // 定义寄存器地址和数据数组
@@ -186,7 +186,7 @@ static void Set_Frame_Size(framesize_t framesize) // 设置帧尺寸函数
         {0x0b, H8(w + 8)},
         {0x0c, L8(w + 8)}
     };
-    write_regs(reg_data, sizeof(reg_data)/(sizeof(rt_uint8_t) * 2));
+    GC0308_I2C_Write_Regs(reg_data, sizeof(reg_data)/(sizeof(rt_uint8_t) * 2));
 #endif
     LOG_I("设置帧大小: %d*%d", w, h);
 //    LOG_I("Set frame size to: %d*%d", w, h);
@@ -256,45 +256,22 @@ void GC0308_Reponse_Callback(void *parameter)
 
     ret = GC0308_Register_Init();    //GC0308寄存器初始化
 
-//        char *buffer = "a";
-//        rt_device_t uart3_mqtt;                   //4g模块串口
-//        struct rt_semaphore mqtt_sem;
-//        uart3_mqtt = rt_device_find("uart3");                       //寻找4g模块串口输出设备
-//        if(uart3_mqtt == RT_NULL)
-//            LOG_E("Cannot find camera device on uart3");
-//        rt_device_open(uart3_mqtt, RT_DEVICE_OFLAG_RDWR);           //打开4g模块串口输出设备 读写
-//        rt_err_t result1 = rt_sem_init(&mqtt_sem, "mqtt_sem", 0, RT_IPC_FLAG_FIFO);  //初始化MQTT件信号量 先进先出模式
-//        if (result1 != RT_EOK)
-//            LOG_E("Failed to initialize the MQTT semaphore");
-//        rt_device_write(uart3_mqtt, 0, buffer, sizeof(buffer));
-
     while(ret == RT_EOK)
     {
-//        __HAL_DCMI_ENABLE_IT(camera_device_t.dcmi, DCMI_IT_FRAME);  //使用帧中断
-//        memset((void *)JpegBuffer,0,pictureBufferLength * 4);       //把接收BUF清空
-//        HAL_DCMI_Start_DMA(camera_device_t.dcmi, DCMI_MODE_SNAPSHOT,(rt_uint32_t)JpegBuffer, pictureBufferLength);//启动拍照
-//        rt_thread_mdelay(50);
-//
-//        if(rt_sem_take(&dcmi_sem, RT_WAITING_FOREVER) == RT_EOK)
-//        {
-//            HAL_DCMI_Suspend(camera_device_t.dcmi);   //拍照完成，挂起DCMI
-//            HAL_DCMI_Stop(camera_device_t.dcmi);      //拍照完成，停止DMA传输
-//            int pictureLength =pictureBufferLength;
-//            while(pictureLength > 0)        //循环计算出接收的JPEG的大小
-//            {
-//                if(JpegBuffer[pictureLength-1] != 0x00000000)
-//                    break;
-//                pictureLength--;
-//            }
-//            pictureLength *= 4;//buf是uint32_t，下面发送是uint8_t,所以长度要*4
-//
-////            if(rt_mutex_take(camera_device_t.lock, RT_WAITING_FOREVER) != RT_EOK)       //上锁
-////                LOG_E("Failed to obtain the mutex\r\n");
-//            rt_device_write(camera_device_t.uart, 0, (rt_uint8_t*)JpegBuffer, pictureLength);
-////            rt_mutex_release(camera_device_t.lock);                                     //解锁
-//        }
+        __HAL_DCMI_ENABLE_IT(camera_device_t.dcmi, DCMI_IT_FRAME);                      //使用帧中断
+        rt_memset((void *)JpegBuffer,0,PICTURE_BUFFER_LENGTH * sizeof(rt_uint32_t));    //把接收BUF清空
+        //启动拍照    DCMI结构体指针 DCMI捕获模式 目标内存缓冲区地址 要传输的捕获长度
+        HAL_DCMI_Start_DMA(camera_device_t.dcmi, DCMI_MODE_SNAPSHOT,(rt_uint32_t)JpegBuffer, PICTURE_BUFFER_LENGTH);    //启动拍照
+        rt_thread_mdelay(50);
 
-        rt_thread_mdelay(10000);
+        if(rt_sem_take(&dcmi_sem, RT_WAITING_FOREVER) == RT_EOK)    //等待DCMI释放一帧图像信号量
+        {
+            HAL_DCMI_Suspend(camera_device_t.dcmi);                 //拍照完成，挂起DCMI
+            HAL_DCMI_Stop(camera_device_t.dcmi);                    //拍照完成，停止DMA传输
+            LOG_I("拍照成功");
+        }
+
+        rt_thread_mdelay(1000);
     }
 }
 
@@ -309,6 +286,22 @@ void GC0308_Reponse(void)
 }
 
 #ifndef USE_STM32IPL
+
+void Interior_Take_Picture(void)
+{
+    __HAL_DCMI_ENABLE_IT(camera_device_t.dcmi, DCMI_IT_FRAME);  //使用帧中断
+
+    rt_memset((void *)JpegBuffer,0,PICTURE_BUFFER_LENGTH * sizeof(rt_uint32_t));  //把接收BUF清空
+    //启动拍照    DCMI结构体指针 DCMI捕获模式 目标内存缓冲区地址 要传输的捕获长度
+    HAL_DCMI_Start_DMA(camera_device_t.dcmi, DCMI_MODE_SNAPSHOT,(rt_uint32_t)JpegBuffer, PICTURE_BUFFER_LENGTH);    //启动拍照
+
+    if(rt_sem_take(&dcmi_sem, RT_WAITING_FOREVER) == RT_EOK)
+    {
+        HAL_DCMI_Suspend(camera_device_t.dcmi);   //拍照完成，挂起DCMI
+        HAL_DCMI_Stop(camera_device_t.dcmi);      //拍照完成，停止DMA传输
+    }
+}
+
 void Take_Picture(int argc, rt_uint8_t *argv[])
 {
     __HAL_DCMI_ENABLE_IT(camera_device_t.dcmi, DCMI_IT_FRAME);  //使用帧中断

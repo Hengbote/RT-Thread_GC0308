@@ -100,10 +100,12 @@ extern "C"
 #define BSP_I2C1_SDA_PIN    GET_PIN(C, 2)
 #endif
 
-/*#define BSP_USING_I2C2*/
+#define BSP_USING_I2C2
 #ifdef BSP_USING_I2C2
-#define BSP_I2C2_SCL_PIN    GET_PIN(port, pin)
-#define BSP_I2C2_SDA_PIN    GET_PIN(port, pin)
+//#define GT911_SDA   GET_PIN(F, 6)
+//#define GT911_SCL   GET_PIN(F, 7)
+#define BSP_I2C2_SCL_PIN    GET_PIN(F, 7)
+#define BSP_I2C2_SDA_PIN    GET_PIN(F, 6)
 #endif
 
 /*-------------------------- I2C CONFIG END --------------------------*/
