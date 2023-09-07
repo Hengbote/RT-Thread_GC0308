@@ -31,7 +31,7 @@ int main(void)
 
 //    AI_Reponse();           //AI推理
     LCD_Reponse();          //屏幕
-    Touch_Reponse();        //触摸屏
+//    Touch_Reponse();        //触摸屏
     GC0308_Reponse();       //摄像头
 //    BC28_Reponse();         //4G模块
 #ifdef USE_STM32IPL

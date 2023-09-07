@@ -3,6 +3,7 @@
 #include <rtthread.h>
 #include <rtdevice.h>
 #include <stdlib.h>
+#include "image_recognition.h"
 #include "pin_config.h"
 #include "stdlib.h"
 #include "GC0308.h"
@@ -163,6 +164,7 @@ void LCD_ShowIntNum(rt_uint16_t x,rt_uint16_t y,rt_uint16_t num,rt_uint8_t len,r
 void LCD_ShowFloatNum1(rt_uint16_t x,rt_uint16_t y,float num,rt_uint8_t len,rt_uint16_t fc,rt_uint16_t bc,rt_uint8_t sizey);            //显示两位小数变量
 
 void LCD_ShowPicture(rt_uint16_t x,rt_uint16_t y,rt_uint16_t length,rt_uint16_t width,const rt_uint16_t pic[][INPUT_WIDTH]);            //显示图片
+void LCD_Show_Target_Subimages(rt_uint16_t x,rt_uint16_t y,rt_uint16_t length,rt_uint16_t width,const rt_uint16_t pic[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH]);    //显示目标子图片
 
 void Set_Dir(rt_uint8_t dir);
 void LCD_Init(void);                                                                                                                    //初始化

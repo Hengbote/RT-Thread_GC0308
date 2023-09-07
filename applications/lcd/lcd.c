@@ -738,12 +738,35 @@ void LCD_ShowPicture(rt_uint16_t x,rt_uint16_t y,rt_uint16_t length,rt_uint16_t 
     {
         for(i=0;i<length;i++)
         {
-            pic_val = (pic[i][j] >> 8) | (pic[i][j] << 8);
+            pic_val = (pic[i][j] >> 8) | (pic[i][j] << 8);  //串口处理后的数据高位与低位位置会反过来
             LCD_WR_DATA(pic_val);
         }
     }
 }
 
+/******************************************************************************
+      函数说明：显示目标子图片
+      入口数据：x,y起点坐标
+                length 图片长度
+                width  图片宽度
+                pic[]  图片数组
+      返回值：  无
+******************************************************************************/
+void LCD_Show_Target_Subimages(rt_uint16_t x,rt_uint16_t y,rt_uint16_t length,rt_uint16_t width,const rt_uint16_t pic[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH])
+{
+    rt_uint16_t pic_val;
+    rt_uint16_t i,j;
+    LCD_Address_Set(x,y,x+length-1,y+width-1);
+
+    for(j=0;j<width;j++)
+    {
+        for(i=0;i<length;i++)
+        {
+            pic_val = (pic[i][j] >> 8) | (pic[i][j] << 8);  //串口处理后的数据高位与低位位置会反过来
+            LCD_WR_DATA(pic_val);
+        }
+    }
+}
 
 void Set_Dir(rt_uint8_t dir)
 {
@@ -900,7 +923,9 @@ static void LCD_Reponse_Callback(void *parameter)      //LCD响应回调函数
 //    LCD_Fill(0, 0, 320, 480, RED);
     while (1)
     {
-        LCD_ShowPicture(0,160,INPUT_HEIGHT,INPUT_WIDTH,JpegBuffer);
+        LCD_ShowPicture(0,0,INPUT_HEIGHT,INPUT_WIDTH,JpegBuffer);
+//        LCD_ShowPicture(0,160,INPUT_HEIGHT,INPUT_WIDTH,JpegBuffer);
+        Split_Image_Into_Subimages(0, 0);
         rt_thread_mdelay(5000);
 
     }

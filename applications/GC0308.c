@@ -262,7 +262,6 @@ void GC0308_Reponse_Callback(void *parameter)
         rt_memset((void *)JpegBuffer,0,PICTURE_BUFFER_LENGTH * sizeof(rt_uint32_t));    //把接收BUF清空
         //启动拍照    DCMI结构体指针 DCMI捕获模式 目标内存缓冲区地址 要传输的捕获长度
         HAL_DCMI_Start_DMA(camera_device_t.dcmi, DCMI_MODE_SNAPSHOT,(rt_uint32_t)JpegBuffer, PICTURE_BUFFER_LENGTH);    //启动拍照
-        rt_thread_mdelay(50);
 
         if(rt_sem_take(&dcmi_sem, RT_WAITING_FOREVER) == RT_EOK)    //等待DCMI释放一帧图像信号量
         {
@@ -287,7 +286,7 @@ void GC0308_Reponse(void)
 
 #ifndef USE_STM32IPL
 
-void Interior_Take_Picture(void)
+void Interior_Take_Picture(void)        //内部拍照
 {
     __HAL_DCMI_ENABLE_IT(camera_device_t.dcmi, DCMI_IT_FRAME);  //使用帧中断
 
