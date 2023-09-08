@@ -272,7 +272,7 @@ void GC0308_Reponse_Callback(void *parameter)
 
         rt_sem_release(shot_sem);   //释放拍摄事件信号量
 //        rt_thread_mdelay(50);
-        rt_thread_mdelay(100);
+        rt_thread_mdelay(1000);
     }
 }
 

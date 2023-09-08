@@ -1,18 +1,31 @@
-
+#引入os模块
 import os
+#导入building的所有模块
 from building import *
 
+#获取获取当前路径，并保存至变量cwd
 cwd = GetCurrentDir()
+#获取当前目录下的所有 C 文件，并保存至src变量
 src  = Glob('*.c')
+
+
 # add cubemx drivers
+#由于RT-Thread工程中存在部分相同函数文件，所以对src重新赋值
+#文件中的stm32g4xx_it.c 、 system_stm32g4xx.c不加入构建
+#其余文件按相同格式填写到下述括号内
 src = Split('''
 Src/stm32u5xx_hal_msp.c
 Src/main.c
+Src/network_data_params.c
+Src/network_data.c
+Src/network.c
 ''')
 
+#创建路径列表，并保存至path中
 path = [cwd]
 path += [cwd + '/Inc']
 
+#这是 RT-Thread 基于 SCons 扩展的一个方法（函数）。
 group = DefineGroup('cubemx', src, depend = [''], CPPPATH = path)
 
 Return('group')

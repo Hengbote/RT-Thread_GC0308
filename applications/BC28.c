@@ -10,6 +10,8 @@
 #define DBG_LVL DBG_INFO
 #include <rtdbg.h>
 
+extern int result[6];
+
 //static rt_event_t recvdata_event;                   /* 事件集 */
 static rt_sem_t mqttinit_sem;                       /* 信号量 */
 //static rt_mailbox_t tmp_msg_mb;                     /* 邮箱 */
@@ -49,13 +51,11 @@ static void onenet_upload_data_entry(void *parameter)
 
     while (1)
     {
-        data += 1;
-        if(data >= 28800)
-            data = 0;
 
+        data = result[0]*100000+result[1]*10000+result[2]*1000+result[3]*100+result[4]*10;
         /* 60s上传一次数据 */
 //        rt_thread_mdelay(600);
-        rt_thread_mdelay(60000);
+        rt_thread_mdelay(30000);
 
         /* 上传发送节点1的数据到OneNet服务器，数据流名字是temperature_p0 */
         if (onenet_mqtt_upload_digit("Data_stream", data) != RT_EOK)

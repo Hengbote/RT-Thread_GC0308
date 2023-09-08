@@ -119,6 +119,7 @@ void Error_Handler(void);
 /* USER CODE BEGIN Private defines */
 void MX_DCMI_Init(void);
 void MX_GPDMA1_Init(void);
+void MX_CRC_Init(void);
 
 /* USER CODE END Private defines */
 

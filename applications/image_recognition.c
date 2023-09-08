@@ -6,8 +6,6 @@
 #include "i2c.h"
 #include "lcd.h"
 
-#ifndef USE_STM32IPL
-
 #define DBG_TAG "image_recognition"
 #define DBG_LVL DBG_INFO
 #include <rtdbg.h>
@@ -21,7 +19,6 @@ rt_uint8_t Target_Subimage_5[STANDARD_IMAGE_HEIGHT * STANDARD_IMAGE_WIDTH * STAN
 static rt_uint8_t  Binary_JpegBuffer[INPUT_HEIGHT][INPUT_WIDTH];                                    //图片二值化缓冲
 static rt_uint8_t  Gray_Scale_JpegBuffer[INPUT_HEIGHT][INPUT_WIDTH];                                //图片灰度化缓冲
 extern rt_uint16_t JpegBuffer[INPUT_HEIGHT][INPUT_WIDTH];                                           //原始图片缓冲
-extern struct rt_semaphore dcmi_sem;            //DCMI帧事件中断 回调函数信号量
 
 extern Camera_Structure camera_device_t;    //摄像头设备结构体
 static rt_thread_t rmage_recognition_response_t;   //图像识别任务结构体
@@ -134,7 +131,7 @@ static void Split_An_Image_Into_Subimages(  rt_uint8_t (*subImages)[SUBIMAGE_HEI
 static void Split_An_Image_Into_Target_Subimages(   rt_uint16_t (*subImages)[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH],
                                                     rt_uint8_t row, rt_uint8_t column)  //分割子图像
 {
-    LOG_I("row = %d, column = %d", row, column);
+//    LOG_I("row = %d, column = %d", row, column);
 
     for (int y = 0; y < SUBIMAGE_HEIGHT; y++){
         for (int x = 0; x < SUBIMAGE_WIDTH; x++){
@@ -146,8 +143,8 @@ static void Split_An_Image_Into_Target_Subimages(   rt_uint16_t (*subImages)[SUB
     }
 }
 
-static void Split_Image_Conversion_Format(  rt_uint8_t Target_Subimage[STANDARD_IMAGE_HEIGHT * STANDARD_IMAGE_WIDTH * STANDARD_IMAGE_COLOUR],
-                                            rt_uint8_t row, rt_uint8_t column)  //分割子图像转换格式放入数组
+void Split_Image_Conversion_Format( rt_uint8_t Target_Subimage[STANDARD_IMAGE_HEIGHT * STANDARD_IMAGE_WIDTH * STANDARD_IMAGE_COLOUR],
+                                    rt_uint8_t row, rt_uint8_t column)  //分割子图像转换格式放入数组
 {
     rt_uint8_t  red   = 0;      //红
     rt_uint8_t  green = 0;      //绿
@@ -158,7 +155,7 @@ static void Split_Image_Conversion_Format(  rt_uint8_t Target_Subimage[STANDARD_
         for (int x = 0; x < STANDARD_IMAGE_WIDTH; x++){
 
             pixel = ((JpegBuffer[column + y][row + x] & 0xFF00) >> 8) | ((JpegBuffer[column + y][row + x] & 0x00FF) << 8); //获得输入图像像素并调整字节顺序
-//            LOG_I("pixel = %x", pixel);
+//            rt_kprintf("%x, ", pixel);
 
             // 提取RGB565分量至RGB888
             red     = (pixel & 0xF800) >> 8;    //248
@@ -258,47 +255,60 @@ void Split_Image_Into_Subimages(rt_uint8_t row, rt_uint8_t column)
 //    int recognition_result = -1;    //识别结果标识位
 
 
+    int y_skew = 65;    //y轴高度调整
 
-    /*
-     * *镜像
-     * int y_skew = 65;
-     * Split_An_Image_Into_Target_Subimages(subImages, 6, y_skew+6);  //分割目标子图像
-     * LCD_Show_Target_Subimages(0,200,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
-     * Split_An_Image_Into_Target_Subimages(subImages, 33, y_skew+5);  //分割目标子图像
-     * LCD_Show_Target_Subimages(0,230,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
-     * Split_An_Image_Into_Target_Subimages(subImages, 58, y_skew+4);  //分割目标子图像
-     * LCD_Show_Target_Subimages(0,260,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
-     * Split_An_Image_Into_Target_Subimages(subImages, 84, y_skew+2);  //分割目标子图像
-     * LCD_Show_Target_Subimages(0,290,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
-     * Split_An_Image_Into_Target_Subimages(subImages, 110, y_skew+1);  //分割目标子图像
-     * LCD_Show_Target_Subimages(0,320,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
-     * Split_An_Image_Into_Target_Subimages(subImages, 136, y_skew+0);  //分割目标子图像
-     * LCD_Show_Target_Subimages(0,350,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
-     * */
+    Split_Image_Conversion_Format(Target_Subimage_0, 136, y_skew+0);                //分割子图像转换格式放入数组
+    Split_Image_Conversion_Format(Target_Subimage_1, 110, y_skew+1);                //分割子图像转换格式放入数组
+    Split_Image_Conversion_Format(Target_Subimage_2, 84, y_skew+2);                 //分割子图像转换格式放入数组
+    Split_Image_Conversion_Format(Target_Subimage_3, 58, y_skew+2);                 //分割子图像转换格式放入数组
+    Split_Image_Conversion_Format(Target_Subimage_4, 33, y_skew+3);                 //分割子图像转换格式放入数组
+    Split_Image_Conversion_Format(Target_Subimage_5, 6, y_skew+6);                  //分割子图像转换格式放入数组
 
-    int y_skew = 64;
-    Split_Image_Conversion_Format(Target_Subimage_0, 17, y_skew+0);                 //分割子图像转换格式放入数组
-    Split_Image_Conversion_Format(Target_Subimage_1, 46, y_skew+1);                 //分割子图像转换格式放入数组
-    Split_Image_Conversion_Format(Target_Subimage_2, 72, y_skew+2);                 //分割子图像转换格式放入数组
-    Split_Image_Conversion_Format(Target_Subimage_3, 98, y_skew+4);                 //分割子图像转换格式放入数组
-    Split_Image_Conversion_Format(Target_Subimage_4, 125, y_skew+5);                //分割子图像转换格式放入数组
-    Split_Image_Conversion_Format(Target_Subimage_5, 152, y_skew+6);                //分割子图像转换格式放入数组
 
-//    for (int i = 0; i<STANDARD_IMAGE_HEIGHT * STANDARD_IMAGE_WIDTH * STANDARD_IMAGE_COLOUR; i++)
-//        LOG_I("%d", Target_Subimage_0[i]);
+//    for(int i = 0; i < STANDARD_IMAGE_HEIGHT * STANDARD_IMAGE_WIDTH * STANDARD_IMAGE_COLOUR; i++){
+//        rt_kprintf("%3d", Target_Subimage_1[i]);}
+//    rt_kprintf("\n");
 
-    Split_An_Image_Into_Target_Subimages(subImages, 17, y_skew+0);                  //分割目标子图像
+    Split_An_Image_Into_Target_Subimages(subImages, 136, y_skew+0);                 //分割目标子图像
     LCD_Show_Target_Subimages(0,200,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
-    Split_An_Image_Into_Target_Subimages(subImages, 46, y_skew+1);                  //分割目标子图像
+    Split_An_Image_Into_Target_Subimages(subImages, 110, y_skew+1);                 //分割目标子图像
     LCD_Show_Target_Subimages(0,230,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
-    Split_An_Image_Into_Target_Subimages(subImages, 72, y_skew+2);                  //分割目标子图像
+    Split_An_Image_Into_Target_Subimages(subImages, 84, y_skew+2);                  //分割目标子图像
     LCD_Show_Target_Subimages(0,260,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
-    Split_An_Image_Into_Target_Subimages(subImages, 98, y_skew+4);                  //分割目标子图像
+    Split_An_Image_Into_Target_Subimages(subImages, 58, y_skew+2);                  //分割目标子图像
     LCD_Show_Target_Subimages(0,290,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
-    Split_An_Image_Into_Target_Subimages(subImages, 125, y_skew+5);                 //分割目标子图像
+    Split_An_Image_Into_Target_Subimages(subImages, 33, y_skew+3);                  //分割目标子图像
     LCD_Show_Target_Subimages(0,320,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
-    Split_An_Image_Into_Target_Subimages(subImages, 152, y_skew+6);                 //分割目标子图像
+    Split_An_Image_Into_Target_Subimages(subImages, 6, y_skew+6);                   //分割目标子图像
     LCD_Show_Target_Subimages(0,350,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
+
+
+//    镜像
+//    int y_skew = 64;
+//    Split_Image_Conversion_Format(Target_Subimage_0, 17, y_skew+0);                 //分割子图像转换格式放入数组
+//    Split_Image_Conversion_Format(Target_Subimage_1, 46, y_skew+1);                 //分割子图像转换格式放入数组
+//    Split_Image_Conversion_Format(Target_Subimage_2, 72, y_skew+2);                 //分割子图像转换格式放入数组
+//    Split_Image_Conversion_Format(Target_Subimage_3, 98, y_skew+4);                 //分割子图像转换格式放入数组
+//    Split_Image_Conversion_Format(Target_Subimage_4, 125, y_skew+5);                //分割子图像转换格式放入数组
+//    Split_Image_Conversion_Format(Target_Subimage_5, 152, y_skew+6);                //分割子图像转换格式放入数组
+//
+//    for(int i = 0; i < STANDARD_IMAGE_HEIGHT * STANDARD_IMAGE_WIDTH * STANDARD_IMAGE_COLOUR; i++)
+//        {rt_kprintf("%3d", Target_Subimage_1[i]);}
+//
+//    rt_kprintf("\n");
+//
+//    Split_An_Image_Into_Target_Subimages(subImages, 17, y_skew+0);                  //分割目标子图像
+//    LCD_Show_Target_Subimages(0,200,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
+//    Split_An_Image_Into_Target_Subimages(subImages, 46, y_skew+1);                  //分割目标子图像
+//    LCD_Show_Target_Subimages(0,230,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
+//    Split_An_Image_Into_Target_Subimages(subImages, 72, y_skew+2);                  //分割目标子图像
+//    LCD_Show_Target_Subimages(0,260,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
+//    Split_An_Image_Into_Target_Subimages(subImages, 98, y_skew+4);                  //分割目标子图像
+//    LCD_Show_Target_Subimages(0,290,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
+//    Split_An_Image_Into_Target_Subimages(subImages, 125, y_skew+5);                 //分割目标子图像
+//    LCD_Show_Target_Subimages(0,320,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
+//    Split_An_Image_Into_Target_Subimages(subImages, 152, y_skew+6);                 //分割目标子图像
+//    LCD_Show_Target_Subimages(0,350,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
 
 
 
@@ -476,5 +486,3 @@ MSH_CMD_EXPORT(Binary_Image, Binary image :<Binary_Image < >|<average>>);
 MSH_CMD_EXPORT(SubImages_An, Output one subimage :<SubImages_An <x> <y>>);
 MSH_CMD_EXPORT(Resizing_Image, Resizing the image :<Resizing_Image <x> <y>>);
 MSH_CMD_EXPORT(Sub_Images, Output subimage);
-
-#endif /*USE_STM32IPL 是否使用IPL库*/

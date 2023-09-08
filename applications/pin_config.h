@@ -41,9 +41,6 @@
 //#define GT911_SDA   GET_PIN(F, 6)
 //#define GT911_SCL   GET_PIN(F, 7)
 
-/*USE_STM32IPL 是否使用IPL库*/
-//#define USE_STM32IPL
-
 /**/
 //#define USE_BARE
 

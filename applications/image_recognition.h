@@ -5,8 +5,6 @@
 #include "pin_config.h"
 #include "main.h"
 
-#ifndef USE_STM32IPL
-
 //#define SUBIMAGE_WIDTH          48  //历遍子图像列数(子图像宽)
 //#define SUBIMAGE_HEIGHT         48  //历遍子图像行数(子图像高)
 //#define STANDARD_IMAGE_WIDTH    96  //标准图像宽
@@ -29,9 +27,9 @@
 #define SATURATE_CAST(value, data) ((data) < 0 ? 0 : ((data) > (value) ? (value) : (data)))
 
 
-
+void Split_Image_Conversion_Format(  rt_uint8_t Target_Subimage[STANDARD_IMAGE_HEIGHT * STANDARD_IMAGE_WIDTH * STANDARD_IMAGE_COLOUR],
+                                     rt_uint8_t row, rt_uint8_t column);  //分割子图像转换格式放入数组
 void Image_Recognition_Reponse(void);  //图像识别任务调用函数
 void Split_Image_Into_Subimages(rt_uint8_t row, rt_uint8_t column);
 
-#endif /*USE_STM32IPL 是否使用IPL库*/
 #endif /* APPLICATIONS_IMAGE_RECOGNITION_H_ */

@@ -9,7 +9,7 @@
 
 static rt_thread_t LCD_thread;                              //LCD的线程的句柄
 extern rt_uint16_t JpegBuffer[INPUT_HEIGHT][INPUT_WIDTH];   //原始图片缓冲
-extern rt_sem_t shot_sem;                                   //拍照完成信号量
+extern rt_sem_t shot_sem;                                     //拍照完成信号量
 
 //管理LCD重要参数
 //默认为竖屏
@@ -732,10 +732,10 @@ void LCD_ShowFloatNum1(rt_uint16_t x,rt_uint16_t y,float num,rt_uint8_t len,rt_u
 void LCD_ShowPicture(rt_uint16_t x,rt_uint16_t y,rt_uint16_t length,rt_uint16_t width,const rt_uint16_t pic[][INPUT_WIDTH])
 {
     rt_uint16_t pic_val;
-    rt_uint16_t i,j;
+    int i,j;
     LCD_Address_Set(x,y,x+length-1,y+width-1);
 
-    for(j=0;j<width;j++)
+    for(j=width;j>-1;j--)   //镜像翻转
     {
         for(i=0;i<length;i++)
         {
@@ -756,10 +756,11 @@ void LCD_ShowPicture(rt_uint16_t x,rt_uint16_t y,rt_uint16_t length,rt_uint16_t 
 void LCD_Show_Target_Subimages(rt_uint16_t x,rt_uint16_t y,rt_uint16_t length,rt_uint16_t width,const rt_uint16_t pic[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH])
 {
     rt_uint16_t pic_val;
-    rt_uint16_t i,j;
+    int i,j;
     LCD_Address_Set(x,y,x+length-1,y+width-1);
 
-    for(j=0;j<width;j++)
+//    for(j=0;j<width;j++)
+    for(j=width;j>-1;j--)   //镜像翻转
     {
         for(i=0;i<length;i++)
         {
@@ -929,6 +930,8 @@ static void LCD_Reponse_Callback(void *parameter)      //LCD响应回调函数
         LCD_ShowPicture(0,0,INPUT_HEIGHT,INPUT_WIDTH,JpegBuffer);       //显示拍摄的照片
 //        LCD_ShowPicture(0,160,INPUT_HEIGHT,INPUT_WIDTH,JpegBuffer);
         Split_Image_Into_Subimages(0, 0);
+
+        rt_thread_mdelay(500);
 
     }
 }
