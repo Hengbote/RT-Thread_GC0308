@@ -12,7 +12,7 @@
 #include <rtdbg.h>
 
 
-Camera_Structure camera_device_t;     //摄像头设备
+Camera_Structure camera_device_t;       //摄像头设备
 rt_thread_t gc0308_i2c_response_t;      //摄像头任务结构体
 
 rt_err_t GC0308_I2C_Write_Reg(rt_uint8_t reg, rt_uint8_t len, rt_uint8_t *buf)      //写 寄存器地址 数据长度 数据

@@ -7,18 +7,14 @@
 #define DBG_LVL DBG_INFO
 #include <rtdbg.h>
 
-#ifdef USE_STM32IPL
-     #include "fp_vision_app.h"
-#else
 rt_uint16_t JpegBuffer[INPUT_HEIGHT][INPUT_WIDTH];
-#endif
 
 extern DCMI_HandleTypeDef hdcmi;
 extern DMA_HandleTypeDef handle_GPDMA1_Channel0;
 extern Camera_Structure camera_device_t;        //摄像头设备
 rt_thread_t camera_response_t;                  //摄像头任务结构体
 struct rt_semaphore dcmi_sem;                   //DCMI帧事件中断 回调函数信号量
-//static struct rt_semaphore dcmi_sem;            //DCMI帧事件中断 回调函数信号量
+rt_sem_t shot_sem;                              //拍照完成信号量
 
 const resolution_info_t resolution[FRAMESIZE_INVALID] = {
     {   96,   96, ASPECT_RATIO_1X1   }, /* 96x96 */
@@ -211,7 +207,7 @@ static rt_err_t GC0308_Register_Init(void)  //GC0308寄存器初始化
 /* DCMI接收到一桢数据后产生帧事件中断，调用此回调函数 */
 void HAL_DCMI_FrameEventCallback(DCMI_HandleTypeDef *hdcmi)     //帧事件中断 回调函数
 {
-    rt_sem_release(&dcmi_sem);      //发送信号量
+    rt_sem_release(&dcmi_sem);      //释放帧事件信号量
 }
 
 /**
@@ -250,9 +246,13 @@ void GC0308_Reponse_Callback(void *parameter)
         LOG_E("Cannot find camera device on DCMI");
 
     rt_device_open(camera_device_t.uart, RT_DEVICE_OFLAG_WRONLY);                                       //打开摄像头串口输出设备 只读
-    rt_err_t result = rt_sem_init(&dcmi_sem, "dcmi_sem", 0, RT_IPC_FLAG_FIFO);                          //初始化帧事件信号量 先进先出模式
-    if (result != RT_EOK)
-        LOG_E("Failed to initialize the semaphore");
+    rt_err_t dcmi_sem_result = rt_sem_init(&dcmi_sem, "dcmi_sem", 0, RT_IPC_FLAG_FIFO);                 //初始化帧事件信号量 先进先出模式
+    if (dcmi_sem_result != RT_EOK)
+        LOG_E("Failed to initialize the DCMI semaphore");
+
+    shot_sem = rt_sem_create("shot_sem", RT_NULL, RT_IPC_FLAG_FIFO);                                    //创建拍摄完成信号量 先进先出模式
+    if (shot_sem == RT_NULL)
+        LOG_E("Failed to create a shot completion semaphore");
 
     ret = GC0308_Register_Init();    //GC0308寄存器初始化
 
@@ -270,7 +270,9 @@ void GC0308_Reponse_Callback(void *parameter)
 //            LOG_I("拍照成功");
         }
 
-        rt_thread_mdelay(1000);
+        rt_sem_release(shot_sem);   //释放拍摄事件信号量
+//        rt_thread_mdelay(50);
+        rt_thread_mdelay(100);
     }
 }
 
@@ -283,8 +285,6 @@ void GC0308_Reponse(void)
 //        LOG_I("GC0308_Reponse Init Success");
     }
 }
-
-#ifndef USE_STM32IPL
 
 void Interior_Take_Picture(void)        //内部拍照
 {
@@ -324,30 +324,3 @@ void Take_Picture(int argc, rt_uint8_t *argv[])
 
 /* 导出到 msh 命令列表中 */
 MSH_CMD_EXPORT(Take_Picture, Take a picture);
-
-#else
-void Take_Picture(int argc, rt_uint8_t *argv[])
-{
-    __HAL_DCMI_ENABLE_IT(camera_device_t.dcmi, DCMI_IT_FRAME);  //使用帧中断
-
-    rt_memset((void *)ai_fp_global_memory,0,CAM_FRAME_BUFFER_SIZE * sizeof(rt_uint32_t));  //把接收BUF清空
-    //启动拍照    DCMI结构体指针 DCMI捕获模式 目标内存缓冲区地址 要传输的捕获长度
-    HAL_DCMI_Start_DMA(camera_device_t.dcmi, DCMI_MODE_SNAPSHOT,(rt_uint32_t)ai_fp_global_memory, CAM_FRAME_BUFFER_SIZE);    //启动拍照
-
-    if(rt_sem_take(&dcmi_sem, RT_WAITING_FOREVER) == RT_EOK)
-    {
-        HAL_DCMI_Suspend(camera_device_t.dcmi);   //拍照完成，挂起DCMI
-        HAL_DCMI_Stop(camera_device_t.dcmi);      //拍照完成，停止DMA传输
-    }
-
-    if(argc == 1)
-        rt_device_write(camera_device_t.uart, 0, ai_fp_global_memory, CAM_FRAME_BUFFER_SIZE * sizeof(rt_uint32_t));          //通过串口输出图片数据
-    else if(argc == 2)
-        LOG_I("拍照成功");
-//        LOG_I("Photo taken successfully");
-}
-
-/* 导出到 msh 命令列表中 */
-MSH_CMD_EXPORT(Take_Picture, Take a picture);
-
-#endif
