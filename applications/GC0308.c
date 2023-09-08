@@ -267,7 +267,7 @@ void GC0308_Reponse_Callback(void *parameter)
         {
             HAL_DCMI_Suspend(camera_device_t.dcmi);                 //拍照完成，挂起DCMI
             HAL_DCMI_Stop(camera_device_t.dcmi);                    //拍照完成，停止DMA传输
-            LOG_I("拍照成功");
+//            LOG_I("拍照成功");
         }
 
         rt_thread_mdelay(1000);

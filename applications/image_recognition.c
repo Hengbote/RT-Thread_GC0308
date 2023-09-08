@@ -12,10 +12,15 @@
 #define DBG_LVL DBG_INFO
 #include <rtdbg.h>
 
+rt_uint8_t Target_Subimage_0[STANDARD_IMAGE_HEIGHT * STANDARD_IMAGE_WIDTH * STANDARD_IMAGE_COLOUR];   //目标子图片缓冲
+rt_uint8_t Target_Subimage_1[STANDARD_IMAGE_HEIGHT * STANDARD_IMAGE_WIDTH * STANDARD_IMAGE_COLOUR];   //目标子图片缓冲
+rt_uint8_t Target_Subimage_2[STANDARD_IMAGE_HEIGHT * STANDARD_IMAGE_WIDTH * STANDARD_IMAGE_COLOUR];   //目标子图片缓冲
+rt_uint8_t Target_Subimage_3[STANDARD_IMAGE_HEIGHT * STANDARD_IMAGE_WIDTH * STANDARD_IMAGE_COLOUR];   //目标子图片缓冲
+rt_uint8_t Target_Subimage_4[STANDARD_IMAGE_HEIGHT * STANDARD_IMAGE_WIDTH * STANDARD_IMAGE_COLOUR];   //目标子图片缓冲
+rt_uint8_t Target_Subimage_5[STANDARD_IMAGE_HEIGHT * STANDARD_IMAGE_WIDTH * STANDARD_IMAGE_COLOUR];   //目标子图片缓冲
 static rt_uint8_t  Binary_JpegBuffer[INPUT_HEIGHT][INPUT_WIDTH];                                    //图片二值化缓冲
 static rt_uint8_t  Gray_Scale_JpegBuffer[INPUT_HEIGHT][INPUT_WIDTH];                                //图片灰度化缓冲
 extern rt_uint16_t JpegBuffer[INPUT_HEIGHT][INPUT_WIDTH];                                           //原始图片缓冲
-rt_uint8_t Target_Subimage[6][STANDARD_IMAGE_HEIGHT * STANDARD_IMAGE_WIDTH * STANDARD_IMAGE_COLOUR];   //目标子图片缓冲
 extern struct rt_semaphore dcmi_sem;            //DCMI帧事件中断 回调函数信号量
 
 extern Camera_Structure camera_device_t;    //摄像头设备结构体
@@ -127,7 +132,7 @@ static void Split_An_Image_Into_Subimages(  rt_uint8_t (*subImages)[SUBIMAGE_HEI
 }
 
 static void Split_An_Image_Into_Target_Subimages(   rt_uint16_t (*subImages)[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH],
-                                                    rt_uint8_t row, rt_uint8_t column)  //分割目标子图像
+                                                    rt_uint8_t row, rt_uint8_t column)  //分割子图像
 {
     LOG_I("row = %d, column = %d", row, column);
 
@@ -135,10 +140,37 @@ static void Split_An_Image_Into_Target_Subimages(   rt_uint16_t (*subImages)[SUB
         for (int x = 0; x < SUBIMAGE_WIDTH; x++){
 
             (*subImages)[y][x] = JpegBuffer[column + y][row + x];               //原图  rt_uint16_t
-//            (*subImages)[y][x] = Gray_Scale_JpegBuffer[column + y][row + x];    //灰度  rt_uint8_t
-//            (*subImages)[y][x] = Binary_JpegBuffer[column + y][row + x];        //二值化 rt_uint8_t
 
 //            LOG_I("y = %d, x = %d", y, x);
+        }
+    }
+}
+
+static void Split_Image_Conversion_Format(  rt_uint8_t Target_Subimage[STANDARD_IMAGE_HEIGHT * STANDARD_IMAGE_WIDTH * STANDARD_IMAGE_COLOUR],
+                                            rt_uint8_t row, rt_uint8_t column)  //分割子图像转换格式放入数组
+{
+    rt_uint8_t  red   = 0;      //红
+    rt_uint8_t  green = 0;      //绿
+    rt_uint8_t  blue  = 0;      //蓝
+    rt_uint16_t pixel = 0;      //原图像素
+
+    for (int y = 0; y < STANDARD_IMAGE_HEIGHT; y++){
+        for (int x = 0; x < STANDARD_IMAGE_WIDTH; x++){
+
+            pixel = ((JpegBuffer[column + y][row + x] & 0xFF00) >> 8) | ((JpegBuffer[column + y][row + x] & 0x00FF) << 8); //获得输入图像像素并调整字节顺序
+//            LOG_I("pixel = %x", pixel);
+
+            // 提取RGB565分量至RGB888
+            red     = (pixel & 0xF800) >> 8;    //248
+            green   = (pixel & 0x07E0) >> 3;    //252
+            blue    = (pixel & 0x001F) << 3;    //248
+//            LOG_I("red = %x, green = %x, blue = %x", red, green, blue);
+
+            Target_Subimage[x*3 + (y*20*3) + 0] = red;
+            Target_Subimage[x*3 + (y*20*3) + 1] = green;
+            Target_Subimage[x*3 + (y*20*3) + 2] = blue;
+
+//            LOG_I("a = %d, b = %d, c = %d", x*3 + (y*20*3) + 0, x*3 + (y*20*3) + 1, x*3 + (y*20*3) + 2);
         }
     }
 }
@@ -205,9 +237,6 @@ static void resize_image(   rt_uint8_t (*subImages)[SUBIMAGE_HEIGHT][SUBIMAGE_WI
 
 void Split_Image_Into_Subimages(rt_uint8_t row, rt_uint8_t column)
 {
-//    rt_uint16_t inputImage_row_subimage    = INPUT_HEIGHT - SUBIMAGE_WIDTH + 1;    //子图像=裁剪后的图像
-//    rt_uint16_t inputImage_column_subimage = INPUT_WIDTH  - SUBIMAGE_HEIGHT    + 1;
-
 
     rt_uint16_t (*subImages)[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH] =
             (rt_uint16_t (*)[SUBIMAGE_HEIGHT][SUBIMAGE_WIDTH])
@@ -227,12 +256,6 @@ void Split_Image_Into_Subimages(rt_uint8_t row, rt_uint8_t column)
 //        LOG_E("Failed to allocate memory for resized_subImage");return;}
 
 //    int recognition_result = -1;    //识别结果标识位
-
-//    for (int column = 0; column < inputImage_column_subimage; column++) {
-//        for (int row = 0; row < inputImage_row_subimage; row++) {
-
-//            Split_An_Image_Into_Subimages(subImages, row, column);                                                                      //分割子图像
-
 
 
 
@@ -254,32 +277,39 @@ void Split_Image_Into_Subimages(rt_uint8_t row, rt_uint8_t column)
      * */
 
     int y_skew = 64;
-    Split_An_Image_Into_Target_Subimages(subImages, 17, y_skew+0);  //分割目标子图像
+    Split_Image_Conversion_Format(Target_Subimage_0, 17, y_skew+0);                 //分割子图像转换格式放入数组
+    Split_Image_Conversion_Format(Target_Subimage_1, 46, y_skew+1);                 //分割子图像转换格式放入数组
+    Split_Image_Conversion_Format(Target_Subimage_2, 72, y_skew+2);                 //分割子图像转换格式放入数组
+    Split_Image_Conversion_Format(Target_Subimage_3, 98, y_skew+4);                 //分割子图像转换格式放入数组
+    Split_Image_Conversion_Format(Target_Subimage_4, 125, y_skew+5);                //分割子图像转换格式放入数组
+    Split_Image_Conversion_Format(Target_Subimage_5, 152, y_skew+6);                //分割子图像转换格式放入数组
+
+//    for (int i = 0; i<STANDARD_IMAGE_HEIGHT * STANDARD_IMAGE_WIDTH * STANDARD_IMAGE_COLOUR; i++)
+//        LOG_I("%d", Target_Subimage_0[i]);
+
+    Split_An_Image_Into_Target_Subimages(subImages, 17, y_skew+0);                  //分割目标子图像
     LCD_Show_Target_Subimages(0,200,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
-    Split_An_Image_Into_Target_Subimages(subImages, 46, y_skew+1);  //分割目标子图像
+    Split_An_Image_Into_Target_Subimages(subImages, 46, y_skew+1);                  //分割目标子图像
     LCD_Show_Target_Subimages(0,230,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
-    Split_An_Image_Into_Target_Subimages(subImages, 72, y_skew+2);  //分割目标子图像
+    Split_An_Image_Into_Target_Subimages(subImages, 72, y_skew+2);                  //分割目标子图像
     LCD_Show_Target_Subimages(0,260,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
-    Split_An_Image_Into_Target_Subimages(subImages, 98, y_skew+4);  //分割目标子图像
+    Split_An_Image_Into_Target_Subimages(subImages, 98, y_skew+4);                  //分割目标子图像
     LCD_Show_Target_Subimages(0,290,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
-    Split_An_Image_Into_Target_Subimages(subImages, 125, y_skew+5);  //分割目标子图像
+    Split_An_Image_Into_Target_Subimages(subImages, 125, y_skew+5);                 //分割目标子图像
     LCD_Show_Target_Subimages(0,320,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
-    Split_An_Image_Into_Target_Subimages(subImages, 152, y_skew+6);  //分割目标子图像
+    Split_An_Image_Into_Target_Subimages(subImages, 152, y_skew+6);                 //分割目标子图像
     LCD_Show_Target_Subimages(0,350,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
 
 
 
+
 //            resize_image(subImages, resized_subImage, SUBIMAGE_WIDTH, SUBIMAGE_HEIGHT, STANDARD_IMAGE_WIDTH, STANDARD_IMAGE_HEIGHT);    //缩放图片
-            rt_device_write(camera_device_t.uart, 0, *subImages, sizeof(*subImages));                                                   //输出子图像
-//            rt_device_write(camera_device_t.uart, 0, *resized_subImage, sizeof(*resized_subImage));                                     //输出缩放图
 
 //            recognition_result = Digital_Recognition(subImages);            //方差判断数字 子图像
 //            recognition_result = Digital_Recognition(resized_subImage);     //方差判断数字 缩放后的图像
 //            if(recognition_result == 7)
 //                LOG_I("recognition_result = %d", recognition_result);
 
-//        }/*历遍每行中子图像*/
-//    }/*历遍每列中子图像*/
 
 //    rt_free(resized_subImage);  //释放缩放图像内存
     rt_free(subImages);         //释放子图像内存
