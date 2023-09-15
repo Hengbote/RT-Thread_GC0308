@@ -52,7 +52,7 @@ static void onenet_upload_data_entry(void *parameter)
     while (1)
     {
 
-        data = result[0]*100000+result[1]*10000+result[2]*1000+result[3]*100+result[4]*10;
+        data = result[5]*100000+result[4]*10000+result[3]*1000+result[2]*100+result[1]*10;
         /* 60s上传一次数据 */
 //        rt_thread_mdelay(600);
         rt_thread_mdelay(30000);

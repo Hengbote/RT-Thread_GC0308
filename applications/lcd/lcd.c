@@ -9,7 +9,8 @@
 
 static rt_thread_t LCD_thread;                              //LCD的线程的句柄
 extern rt_uint16_t JpegBuffer[INPUT_HEIGHT][INPUT_WIDTH];   //原始图片缓冲
-extern rt_sem_t shot_sem;                                     //拍照完成信号量
+extern rt_sem_t shot_sem;                                   //拍照完成信号量
+//extern rt_sem_t ai_sem;                                     //AI信号量
 
 //管理LCD重要参数
 //默认为竖屏
@@ -927,11 +928,12 @@ static void LCD_Reponse_Callback(void *parameter)      //LCD响应回调函数
     {
 
         rt_sem_take(shot_sem, RT_WAITING_FOREVER);                      //接收拍照完成信号量 永久等待
+//        rt_sem_take(ai_sem, RT_WAITING_FOREVER);                        //接收ai信号量 永久等待
         LCD_ShowPicture(0,0,INPUT_HEIGHT,INPUT_WIDTH,JpegBuffer);       //显示拍摄的照片
 //        LCD_ShowPicture(0,160,INPUT_HEIGHT,INPUT_WIDTH,JpegBuffer);
         Split_Image_Into_Subimages(0, 0);
 
-        rt_thread_mdelay(500);
+        rt_thread_mdelay(100);
 
     }
 }

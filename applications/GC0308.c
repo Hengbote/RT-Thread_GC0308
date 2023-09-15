@@ -272,12 +272,13 @@ void GC0308_Reponse_Callback(void *parameter)
 
         rt_sem_release(shot_sem);   //释放拍摄事件信号量
 //        rt_thread_mdelay(50);
-        rt_thread_mdelay(1000);
+        rt_thread_mdelay(100);
     }
 }
 
 void GC0308_Reponse(void)
 {
+//    camera_response_t = rt_thread_create("camera_response_t", GC0308_Reponse_Callback, RT_NULL, 2048, 9, 10);
     camera_response_t = rt_thread_create("camera_response_t", GC0308_Reponse_Callback, RT_NULL, 2048, 10, 10);
     if(camera_response_t!=RT_NULL){
         rt_thread_startup(camera_response_t);

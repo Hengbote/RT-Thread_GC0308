@@ -259,10 +259,10 @@ void Split_Image_Into_Subimages(rt_uint8_t row, rt_uint8_t column)
 
     Split_Image_Conversion_Format(Target_Subimage_0, 136, y_skew+0);                //分割子图像转换格式放入数组
     Split_Image_Conversion_Format(Target_Subimage_1, 110, y_skew+1);                //分割子图像转换格式放入数组
-    Split_Image_Conversion_Format(Target_Subimage_2, 84, y_skew+2);                 //分割子图像转换格式放入数组
-    Split_Image_Conversion_Format(Target_Subimage_3, 58, y_skew+2);                 //分割子图像转换格式放入数组
-    Split_Image_Conversion_Format(Target_Subimage_4, 33, y_skew+3);                 //分割子图像转换格式放入数组
-    Split_Image_Conversion_Format(Target_Subimage_5, 6, y_skew+6);                  //分割子图像转换格式放入数组
+    Split_Image_Conversion_Format(Target_Subimage_2, 84 , y_skew+2);                //分割子图像转换格式放入数组
+    Split_Image_Conversion_Format(Target_Subimage_3, 58 , y_skew+2);                //分割子图像转换格式放入数组
+    Split_Image_Conversion_Format(Target_Subimage_4, 33 , y_skew+3);                //分割子图像转换格式放入数组
+    Split_Image_Conversion_Format(Target_Subimage_5, 6  , y_skew+6);                //分割子图像转换格式放入数组
 
 
 //    for(int i = 0; i < STANDARD_IMAGE_HEIGHT * STANDARD_IMAGE_WIDTH * STANDARD_IMAGE_COLOUR; i++){
@@ -273,13 +273,13 @@ void Split_Image_Into_Subimages(rt_uint8_t row, rt_uint8_t column)
     LCD_Show_Target_Subimages(0,200,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
     Split_An_Image_Into_Target_Subimages(subImages, 110, y_skew+1);                 //分割目标子图像
     LCD_Show_Target_Subimages(0,230,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
-    Split_An_Image_Into_Target_Subimages(subImages, 84, y_skew+2);                  //分割目标子图像
+    Split_An_Image_Into_Target_Subimages(subImages, 84 , y_skew+2);                 //分割目标子图像
     LCD_Show_Target_Subimages(0,260,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
-    Split_An_Image_Into_Target_Subimages(subImages, 58, y_skew+2);                  //分割目标子图像
+    Split_An_Image_Into_Target_Subimages(subImages, 58 , y_skew+2);                 //分割目标子图像
     LCD_Show_Target_Subimages(0,290,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
-    Split_An_Image_Into_Target_Subimages(subImages, 33, y_skew+3);                  //分割目标子图像
+    Split_An_Image_Into_Target_Subimages(subImages, 33 , y_skew+3);                 //分割目标子图像
     LCD_Show_Target_Subimages(0,320,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
-    Split_An_Image_Into_Target_Subimages(subImages, 6, y_skew+6);                   //分割目标子图像
+    Split_An_Image_Into_Target_Subimages(subImages, 6  , y_skew+6);                 //分割目标子图像
     LCD_Show_Target_Subimages(0,350,SUBIMAGE_HEIGHT,SUBIMAGE_WIDTH, *subImages);    //显示子图像
 
 
